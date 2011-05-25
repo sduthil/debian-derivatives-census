@@ -1,0 +1,7 @@
+#!/bin/sh
+set -e
+. etc/census.conf
+
+for u in $(cat $wiki_urls) ; do
+        sed -n -e '/^ *{{{.*/,/^ *}}}/{/^ *{{{.*/d;/^ *}}}/d;p}' $wiki_dir/$(basename $u).txt > $sources_dir/$(basename $u).list
+done

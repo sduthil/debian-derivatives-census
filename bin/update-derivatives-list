@@ -1,0 +1,8 @@
+#!/bin/sh
+set -e
+. etc/census.conf
+
+wget -q http://wiki.debian.org/Derivatives/CensusFull -O - \
+ | grep -o '<a class="include-page-link" href="\([^"]*\)">' \
+ | sed -n -e 's/<a class="include-page-link" href="\([^"]*\)">/http:\/\/wiki.debian.org\1/gp' \
+ > $wiki_urls

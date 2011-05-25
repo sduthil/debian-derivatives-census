@@ -1,0 +1,9 @@
+#!/bin/sh
+set -e
+. etc/census.conf
+
+wget -O $wiki_dir/CensusTemplate.txt http://wiki.debian.org/Derivatives/CensusTemplate?action=raw
+for u in $(cat $wiki_urls) ; do
+	wget -O $wiki_dir/$(basename $u).txt "$u?action=raw"
+	dos2unix -q $(basename $u).txt
+done
