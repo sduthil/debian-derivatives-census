@@ -5,5 +5,5 @@ set -e
 wget -O $wiki_dir/CensusTemplate.txt http://wiki.debian.org/Derivatives/CensusTemplate?action=raw
 for u in $(cat $wiki_urls) ; do
 	wget -O $wiki_dir/$(basename $u).txt "$u?action=raw"
-	dos2unix -q $(basename $u).txt
+	dos2unix -q $wiki_dir/$(basename $u).txt
 done
