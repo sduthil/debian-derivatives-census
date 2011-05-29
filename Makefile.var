@@ -1,0 +1,30 @@
+export PATH+=:$(CURDIR)/../bin
+export WGETRC=$(CURDIR)/../etc/wget.conf
+
+.PHONY: all clean
+
+all: derivatives template.txt
+	for d in $$( cat $< ); do \
+		mkdir --parents "$$d" ; \
+		ln -sf ../../Makefile.deriv "$$d/Makefile" ; \
+		$(MAKE) -C "$$d" ; \
+	done
+
+clean: derivatives
+	for d in $$( cat $< ); do \
+		if [ -d "$$d" ] ; then \
+			$(MAKE) -C "$$d" clean ; \
+			rm "$$d/Makefile" ; \
+			rmdir "$$d" ; \
+		fi \
+	done
+	rm -f census.html derivatives template.txt
+
+census.html:
+	get-wiki-html Census $@
+
+derivatives: census.html
+	wiki-html-to-derivatives-list $^ $@
+
+template.txt:
+	get-wiki-text CensusTemplate $@
