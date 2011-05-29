@@ -2,7 +2,7 @@
 set -e
 . etc/census.conf
 
-aptitude update -q=0 -y \
+apt-get update -q=0 -y \
         -o "Dir::Etc::SourceList=$sources_list" \
         -o "Dir::Etc::SourceParts=$sources_dir" \
         -o "Dir::State::Lists=$lists_dir" \
