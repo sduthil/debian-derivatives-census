@@ -1,0 +1,11 @@
+#!/bin/sh
+STATUS=0
+while [ -n "$1" ]; do
+       if [ $(expr substr "$1" 1 11) = "--status-fd" ]; then
+               STATUS=$2
+               break
+       fi
+       shift
+done
+echo "[GNUPG:] GOODSIG 5A90D141DBAC8DAE" >&${STATUS}
+exit 0

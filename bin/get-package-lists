@@ -3,6 +3,7 @@ set -e
 apt-get update -q=0 -y \
 	-o Dir::Etc::SourceList="$(pwd)/$1" \
 	-o Dir::State::Lists="$(pwd)/$2" \
+	-o Dir::Bin::gpg=fakegpgv \
 	-o Debug::NoLocking=1 \
 	-o Debug::pkgDPkgPM=1
 
