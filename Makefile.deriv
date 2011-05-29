@@ -1,0 +1,12 @@
+all: wiki.txt sources.list apt
+
+wiki.txt:
+	get-wiki-text Census/$(notdir $(CURDIR)) $@
+
+sources.list: wiki.txt
+	wiki-text-to-sources-list $^ $@
+
+apt: sources.list
+	mkdir --parents $@/partial
+	get-package-lists $^ $@
+
