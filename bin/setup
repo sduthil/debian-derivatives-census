@@ -2,4 +2,10 @@
 set -e
 . etc/census.conf
 
-mkdir ---parents "$conf_dir" "$data_dir" "$wiki_dir" "$apt_dir" "$sources_dir" "$lists_dir"
+mkdir --parents \
+	"$conf_dir" \
+	"$data_dir" \
+	"$wiki_dir" \
+	"$apt_dir" \
+	"$sources_dir" \
+	"$lists_dir"
