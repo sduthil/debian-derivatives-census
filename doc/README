@@ -1,0 +1,39 @@
+Welcome to the Debian derivatives census scripts!
+
+There are currently two approaches used with two sets of scripts.
+One of the approaches will be removed if the other is better.
+
+Some files are common to both approaches:
+
+etc/wget.conf: sets some parameters
+bin/fakegpgv: a fake gpg verifier to silence apt
+
+The first splits up the actions and performs each action on all derivatives:
+
+The results are grouped into directories based on the data type.
+
+etc/census.conf: directory configuration
+bin/setup: setup the directories needed
+bin/update-derivatives-list: creates a list of derivatives from the wiki
+bin/update-wiki-pages: downloads text versions of all the wiki pages
+bin/update-sources-lists: extracts sources.list snippets from all the wiki pages
+bin/update-package-info: updates all the package lists from the sources.list snippets
+var/wiki/*.txt: the text versions of the wiki pages
+var/apt/sources.list.d/*.list: the sources.list snippets
+var/apt/lists/: the apt package lists
+
+The second uses make and gives each derivative a subdirectory.
+
+Makefile: the main makefile machinery
+Makefile.deriv: used by each derivative directory
+bin/get-wiki-html: downloads the HTML version of a wiki page
+bin/get-wiki-text: downloads the text version of a wiki page
+bin/get-package-lists: downloads the package lists
+bin/wiki-html-to-derivatives-list: converts the census wiki page to a list of derivatives
+bin/wiki-text-to-sources-list: extracts a sources.list snippet from a wiki page
+var/census.html: the HTML version of the census wiki page
+var/template.txt: the text version of the census template wiki page
+var/derivatives: a list of names of derivative wiki pages
+var/*/wiki.txt: the text versions of the derivative wiki pages
+var/*/sources.list: the sources.list snippets
+var/*/apt/: the apt package lists
