@@ -1,4 +1,4 @@
 #!/bin/sh
 set -e
-wget -q "http://wiki.debian.org/Derivatives/$1" -O - | dos2unix -q > "$2"
+wget -q "http://wiki.debian.org/Derivatives/$1" -O - | tr -d '\r' > "$2"
 find "$2" -empty -delete
