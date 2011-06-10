@@ -28,3 +28,6 @@ derivatives: census.html
 
 template.txt:
 	get-wiki-text CensusTemplate $@
+
+planet-config.ini: derivatives
+	derivatives-to-planet $^ $@ heads/downstream
