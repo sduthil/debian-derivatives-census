@@ -1,4 +1,6 @@
 #!/bin/sh
 set -e
-sed -r -n -e 's/.*\{\{([^{}|]+)[^}]*\}\}.*/\1/p' "$1" > "$2"
-find "$2" -empty -delete
+if test -f "$1" ; then
+	sed -r -n -e 's/^[^{]*\{\{([^{}|]+)[^{}]*\}\}[^}]*.*$/\1/p' "$1" | head -n1 > "$2"
+	find "$2" -empty -delete
+fi

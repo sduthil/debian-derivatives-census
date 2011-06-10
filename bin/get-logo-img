@@ -1,4 +1,6 @@
 #!/bin/sh
 set -e
-wget -q "$(cat "$1")" -O - > "$2"
-find "$2" -empty -delete
+if test -e "$1" ; then
+	wget -q "$(cat "$1")" -O - > "$2"
+	find "$2" -empty -delete
+fi

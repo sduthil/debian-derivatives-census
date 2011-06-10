@@ -4,14 +4,15 @@ use XML::Feed;
 
 my @feeds;
 
-open( FILE, "< $ARGV[0]" ) or die "Can't open $ARGV[0] : $!";
+open( FILE, "< $ARGV[0]" ) or exit 0;
 while( <FILE> ) {
 	next if /^(\s)*$/;
 	chomp;
-	push @feeds, XML::Feed->find_feeds($_);
+	my ($feed) = XML::Feed->find_feeds($_);
+	push @feeds, $feed;
 }
 close FILE;
 
-open (FILE, "> $ARGV[1]") or die "Can't open $ARGV[1] : $!";
-print FILE @feeds;
+open (FILE, "> $ARGV[1]") or exit 0;
+print FILE join("\n", @feeds);
 close (MYFILE);
