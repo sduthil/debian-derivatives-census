@@ -1,0 +1,4 @@
+#!/bin/sh
+set -e
+sed -r -n -e 's/.*\{\{([^{}|]+)[^}]*\}\}.*/\1/p' "$1" > "$2"
+find "$2" -empty -delete

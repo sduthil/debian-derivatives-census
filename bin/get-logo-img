@@ -1,0 +1,4 @@
+#!/bin/sh
+set -e
+wget -q "$(cat "$1")" -O - > "$2"
+find "$2" -empty -delete

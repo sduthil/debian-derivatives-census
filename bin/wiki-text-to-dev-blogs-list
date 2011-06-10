@@ -1,0 +1,4 @@
+#!/bin/sh
+set -e
+sed -r -n -e 's/^ *\* *developer blogs: (.*)/\1/p' "$1" | tr ' ' '\n' > "$2"
+find "$2" -empty -delete

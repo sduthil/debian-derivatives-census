@@ -1,0 +1,17 @@
+#!/usr/bin/perl
+
+use XML::Feed;
+
+my @feeds;
+
+open( FILE, "< $ARGV[0]" ) or die "Can't open $ARGV[0] : $!";
+while( <FILE> ) {
+	next if /^(\s)*$/;
+	chomp;
+	push @feeds, XML::Feed->find_feeds($_);
+}
+close FILE;
+
+open (FILE, "> $ARGV[1]") or die "Can't open $ARGV[1] : $!";
+print FILE @feeds;
+close (MYFILE);
