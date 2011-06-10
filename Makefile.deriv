@@ -15,3 +15,5 @@ apt: sources.list
 
 clean:
 	rm -rf wiki.txt sources.list apt
+
+.PHONY: apt
