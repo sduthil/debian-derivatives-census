@@ -30,4 +30,4 @@ template.txt:
 	get-wiki-text CensusTemplate $@
 
 planet-config.ini: derivatives
-	derivatives-to-planet $^ $@ heads/downstream
+	derivatives-to-planet $^ $@ heads/deriv

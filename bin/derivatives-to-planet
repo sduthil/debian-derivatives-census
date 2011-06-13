@@ -18,17 +18,18 @@ f = open(sys.argv[2], 'w')
 for d in df:
 	d = d.strip()
 	if not d: continue
-	src = os.path.abspath(os.path.join(d,'logo-img'))
-	dst = os.path.abspath(os.path.join(sys.argv[3],d))
-	try: os.remove(dst)
-	except: pass
-	os.symlink(os.path.relpath(src,dst),dst)
 	name = open(os.path.join(d,'name')).read().strip()
+	src = os.path.abspath(os.path.join(d,'logo-img'))
+	if os.path.exists(src):
+		dst = os.path.abspath(os.path.join(sys.argv[3],d))
+		try: os.remove(dst)
+		except: pass
+		os.symlink(os.path.relpath(src,sys.argv[3]),dst)
 	try:
 		rf = open(os.path.join(d,'blogs-rss'))
 		for rss in rf:
 			if not rss.strip(): continue
-			args = (rss.strip(), name, 'downstream/%s' % d)
+			args = (rss.strip(), name, 'deriv/%s' % d)
 			f.write(template % args)
 		rf.close()
 	except:
@@ -37,7 +38,7 @@ for d in df:
 		rf = open(os.path.join(d,'blogs-dev-rss'))
 		for rss in rf:
 			if not rss.strip(): continue
-			args = (rss.strip(), name + ' developers', 'downstream/%s' % d)
+			args = (rss.strip(), name + ' developers', 'deriv/%s' % d)
 			f.write(template % args)
 		rf.close()
 	except:
