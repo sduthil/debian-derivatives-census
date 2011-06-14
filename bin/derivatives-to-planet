@@ -2,13 +2,10 @@
 
 import os
 import sys
+try: import Image
+except: pass
 
-template = '''[%s]
-name = %s
-face = %s
-
-'''
-
+default_size = (100,100)
 
 try: os.makedirs(sys.argv[3])
 except OSError: pass
@@ -24,13 +21,30 @@ for d in df:
 		dst = os.path.abspath(os.path.join(sys.argv[3],d))
 		try: os.remove(dst)
 		except: pass
-		os.symlink(os.path.relpath(src,sys.argv[3]),dst)
+		try:
+			img = Image.open(src)
+			img.thumbnail(default_size,Image.ANTIALIAS)
+			img.save(dst, 'PNG')
+			img_size = img.size
+		except:
+			os.symlink(os.path.relpath(src,sys.argv[3]),dst)
+			img = src
+			img_size = None
+	else:
+		img = None
+		img_size = None
 	try:
 		rf = open(os.path.join(d,'blogs-rss'))
 		for rss in rf:
 			if not rss.strip(): continue
-			args = (rss.strip(), name, 'deriv/%s' % d)
-			f.write(template % args)
+			f.write("[%s]\n" % rss.strip())
+			f.write("name = %s\n" % name)
+			if img is not None:
+				f.write("face = deriv/%s\n" % d)
+			if img_size is not None:
+				f.write("facewidth = %s\n" % img_size[0])
+				f.write("faceheight = %s\n" % img_size[1])
+			f.write("\n")
 		rf.close()
 	except:
 		pass
@@ -38,8 +52,14 @@ for d in df:
 		rf = open(os.path.join(d,'blogs-dev-rss'))
 		for rss in rf:
 			if not rss.strip(): continue
-			args = (rss.strip(), name + ' developers', 'deriv/%s' % d)
-			f.write(template % args)
+			f.write("[%s]\n" % rss.strip())
+			f.write("name = %s developers\n" % name)
+			if img is not None:
+				f.write("face = deriv/%s\n" % d)
+			if img_size is not None:
+				f.write("facewidth = %s\n" % img_size[0])
+				f.write("faceheight = %s\n" % img_size[1])
+			f.write("\n")
 		rf.close()
 	except:
 		pass
