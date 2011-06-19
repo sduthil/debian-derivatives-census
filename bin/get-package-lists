@@ -2,7 +2,7 @@
 set -e
 apt-get update -q=2 -y \
 	-o Dir::Etc::SourceList="$(pwd)/$1" \
-	-o Dir::Etc::SourceParts="/dev/null" \
+	-o Dir::Etc::SourceParts="$(pwd)/$2" \
 	-o Dir::State::Lists="$(pwd)/$2" \
 	-o Dir::Bin::gpg=fakegpgv \
 	-o Debug::NoLocking=1 \
