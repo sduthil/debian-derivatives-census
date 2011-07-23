@@ -1,14 +1,16 @@
 export PATH+=:$(CURDIR)/../bin
 export WGETRC=$(CURDIR)/../etc/wget.conf
 
-.PHONY: all clean
+derivatives := $(shell cat derivatives)
 
-all: derivatives template.txt
-	for d in $$( cat $< ); do \
-		mkdir --parents "$$d" ; \
-		ln -sf ../../Makefile.deriv "$$d/Makefile" ; \
-		$(MAKE) -C "$$d" ; \
-	done
+.PHONY: all clean $(derivatives)
+
+all: census.html derivatives template.txt $(derivatives) planet-config.ini
+
+$(derivatives):
+	mkdir --parents $@
+	ln -sf ../../Makefile.deriv $@/Makefile
+	$(MAKE) -C $@
 
 clean: derivatives
 	for d in $$( cat $< ); do \
