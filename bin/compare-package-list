@@ -51,18 +51,17 @@ for source in source_entries:
 			hash = dsc['sha1']
 			cur.execute('SELECT count(hash) FROM file WHERE hash=%s;', (hash,))
 			if not cur.fetchone()[0]:
-				url = '%s/%s' % (s.archive_uri(srcpkg['Directory']), dsc['name'])
-				if name not in modified_packages:
-					modified_packages[name] = [url,]
-				else:
-					modified_packages[name].append(url)
-#				for part in [x for x in srcpkg['Checksums-Sha1'] if not x['name'].endswith('.dsc')]:
-#					hash = part['sha1']
-#					cur.execute('SELECT count(hash) FROM file WHERE hash=%s;', (hash,))
-#					if not cur.fetchone()[0]:
-#						print "\tderivative: %s/%s" % (s.archive_uri(srcpkg['Directory']), part['name'])
-#					else:
-#						print "\tdebian: %s/%s" % (s.archive_uri(srcpkg['Directory']), part['name'])
+				modified = 0
+				for part in [x for x in srcpkg['Checksums-Sha1'] if not x['name'].endswith('.dsc')]:
+					hash = part['sha1']
+					cur.execute('SELECT count(hash) FROM file WHERE hash=%s;', (hash,))
+					modified += cur.fetchone()[0]
+				if modified:
+					url = '%s/%s' % (s.archive_uri(srcpkg['Directory']), dsc['name'])
+					if name not in modified_packages:
+						modified_packages[name] = [url,]
+					else:
+						modified_packages[name].append(url)
 		f.close()
 
 if modified_packages:
