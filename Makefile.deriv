@@ -10,7 +10,8 @@ sources.list: wiki.txt
 	wiki-text-to-sources-list $^ $@
 
 apt: sources.list
-	mkdir --parents $@/partial
+	mkdir --parents $@/partial $@/trusted.gpg.d
+	touch $@/status $@/trusted.gpg
 	get-package-lists $^ $@
 
 name: wiki.txt
@@ -36,5 +37,3 @@ blogs-dev-rss: blogs-dev
 
 clean:
 	rm -rf wiki.txt sources.list apt
-
-.PHONY: apt
