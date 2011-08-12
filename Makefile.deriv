@@ -1,7 +1,24 @@
 export PATH+=:$(CURDIR)/../../bin
 export WGETRC=$(CURDIR)/../../etc/wget.conf
 
-all: wiki.txt sources.list name logo logo-img blogs blogs-rss blogs-dev blogs-dev-rss apt
+ALL = \
+	wiki.txt \
+	sources.list \
+	apt \
+	name \
+	logo \
+	logo-img \
+	blogs \
+	blogs-rss \
+	blogs-dev \
+	blogs-dev-rss
+
+all: $(ALL)
+
+clean:
+	rm -rf $(ALL)
+
+.PHONY: all clean
 
 wiki.txt:
 	get-wiki-text Census/$(notdir $(CURDIR)) $@
@@ -34,6 +51,3 @@ blogs-dev: wiki.txt
 
 blogs-dev-rss: blogs-dev
 	get-blogs-rss $^ $@
-
-clean:
-	rm -rf wiki.txt sources.list apt
