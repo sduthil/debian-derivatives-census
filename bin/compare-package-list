@@ -37,14 +37,11 @@ for source in source_entries:
 			name = srcpkg['Package']
 			version = srcpkg['Version']
 			if 'Checksums-Sha1' not in srcpkg:
-				print 'warning: %s %s: no SHA-1 hash' % (name, version)
 				continue
 			dsc = [x for x in srcpkg['Checksums-Sha1'] if x['name'].endswith('.dsc')]
 			if not len(dsc):
-				print 'warning: %s %s: SHA-1 hashes but no hash for the dsc file' % (name, version)
 				continue
 			elif len(dsc) > 1:
-				print 'warning: %s %s: multiple dsc files and SHA-1 hashes for them' % (name, version)
 				continue
 			else:
 				dsc = dsc[0]
