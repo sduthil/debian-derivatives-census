@@ -3,6 +3,7 @@ set -e
 . etc/census.conf
 
 apt-get update -q=2 -y \
+        -o "Acquire::http::User-Agent=Debian Derivatives Census QA bot" \
         -o "Dir::Etc::SourceList=$sources_list" \
         -o "Dir::Etc::SourceParts=$sources_dir" \
         -o "Dir::State::Lists=$lists_dir" \
