@@ -40,14 +40,15 @@ for source in source_entries:
 				continue
 			dsc = [x for x in srcpkg['Checksums-Sha1'] if x['name'].endswith('.dsc')]
 			if not len(dsc):
-				continue
+				check_hashes = 1
 			elif len(dsc) > 1:
 				continue
 			else:
 				dsc = dsc[0]
-			hash = dsc['sha1']
-			cur.execute('SELECT count(hash) FROM file WHERE hash=%s;', (hash,))
-			if not cur.fetchone()[0]:
+				hash = dsc['sha1']
+				cur.execute('SELECT count(hash) FROM file WHERE hash=%s;', (hash,))
+				check_hashes = not cur.fetchone()[0]
+			if check_hashes:
 				modified = 0
 				for part in [x for x in srcpkg['Checksums-Sha1'] if not x['name'].endswith('.dsc')]:
 					hash = part['sha1']
