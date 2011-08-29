@@ -41,6 +41,8 @@ for source in source_entries:
 			dsc = [x for x in srcpkg['Checksums-Sha1'] if x['name'].endswith('.dsc')]
 			if not len(dsc):
 				check_hashes = 1
+				dsc = [x for x in srcpkg['Files'] if x['name'].endswith('.dsc')]
+				dsc = dsc[0]
 			elif len(dsc) > 1:
 				continue
 			else:
