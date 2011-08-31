@@ -58,3 +58,8 @@ blogs-dev: wiki.txt
 
 blogs-dev-rss: blogs-dev
 	get-blogs-rss $^ $@
+
+check: check-package-list
+
+check-package-list: sources.list apt
+	check-package-list $^
