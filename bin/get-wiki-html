@@ -1,4 +1,8 @@
 #!/bin/sh
+
+# Copyright 2011 Paul Wise
+# Released under the MIT/Expat license, see doc/COPYING
+
 set -e
 wget -q "http://wiki.debian.org/Derivatives/$1" -O - | tr -d '\r' > "$2"
 find "$2" -empty -delete

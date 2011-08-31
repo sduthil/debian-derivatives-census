@@ -1,4 +1,8 @@
 #!/bin/sh
+
+# Copyright 2011 Paul Wise
+# Released under the MIT/Expat license, see doc/COPYING
+
 set -e
 test -f "$1" || exit 0
 apt-get update -q=2 -y \

@@ -1,4 +1,8 @@
 #!/bin/sh
+
+# Copyright 2011 Paul Wise
+# Released under the MIT/Expat license, see doc/COPYING
+
 STATUS=0
 while [ -n "$1" ]; do
        if [ $(expr substr "$1" 1 11) = "--status-fd" ]; then

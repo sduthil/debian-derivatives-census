@@ -1,4 +1,8 @@
 #!/bin/sh
+
+# Copyright 2011 Paul Wise
+# Released under the MIT/Expat license, see doc/COPYING
+
 cat "$1" \
 | grep -o '<a class="include-page-link" href="\([^"]*\)">' \
 | sed -n -e 's_<a class="include-page-link" href="/Derivatives/Census/\([^"]*\)">_\1_gp' \

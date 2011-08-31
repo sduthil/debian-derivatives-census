@@ -1,5 +1,8 @@
 #!/usr/bin/python
 
+# Copyright 2011 Paul Wise
+# Released under the MIT/Expat license, see doc/COPYING
+
 import os
 import sys
 import debian.deb822
