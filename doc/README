@@ -1,31 +1,15 @@
 Welcome to the Debian derivatives census scripts!
 
-There are currently two approaches used with two sets of scripts.
-One of the approaches will be removed if the other is better.
-
-Some files are common to both approaches:
-
-etc/wget.conf: sets some parameters
-bin/fakegpgv: a fake gpg verifier to silence apt
-
-The first splits up the actions and performs each action on all derivatives:
-
-The results are grouped into directories based on the data type.
-
-etc/census.conf: directory configuration
-bin/setup: setup the directories needed
-bin/update-derivatives-list: creates a list of derivatives from the wiki
-bin/update-wiki-pages: downloads text versions of all the wiki pages
-bin/update-sources-lists: extracts sources.list snippets from all the wiki pages
-bin/update-package-info: updates all the package lists from the sources.list snippets
-var/wiki/*.txt: the text versions of the wiki pages
-var/apt/sources.list.d/*.list: the sources.list snippets
-var/apt/lists/: the apt package lists
-
-The second uses make and gives each derivative a subdirectory.
+The scripts can be run manually or via a framework based on make.
+If using the make-based framework data from each derivative is
+stored in a subdirectory of the var directory. The scripts are
+named in self-explanatory ways and take the names of input and
+output as command-line arguments.
 
 Makefile: the main makefile machinery
 Makefile.deriv: used by each derivative directory
+etc/wget.conf: sets some parameters
+bin/fakegpgv: a fake gpg verifier to silence apt
 bin/get-wiki-html: downloads the HTML version of a wiki page
 bin/get-wiki-text: downloads the text version of a wiki page
 bin/get-package-lists: downloads the package lists
