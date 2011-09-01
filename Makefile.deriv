@@ -11,6 +11,8 @@ ALL = \
 	packages \
 	name \
 	homepage \
+	favicon \
+	favicon-img \
 	logo \
 	logo-img \
 	blogs \
@@ -44,6 +46,12 @@ name: wiki.txt
 
 homepage: wiki.txt
 	wiki-text-to-homepage $^ $@
+
+favicon: homepage
+	get-favicon $^ $@
+
+favicon-img: favicon
+	get-favicon-img $^ $@
 
 logo: wiki.txt
 	wiki-text-to-logo $^ $@

@@ -1,0 +1,22 @@
+#!/usr/bin/perl
+
+# Copyright 2011 Paul Wise
+# Released under the MIT/Expat license, see doc/COPYING
+
+use WWW::Favicon;
+my $favicon = WWW::Favicon->new;
+
+my @icons;
+
+open( FILE, "< $ARGV[0]" ) or exit 0;
+while( <FILE> ) {
+        next if /^(\s)*$/;
+        chomp;
+        my ($icon) = $favicon->detect($_);
+        push @icons, $icon;
+}
+close FILE;
+
+open (FILE, "> $ARGV[1]") or exit 0;
+print FILE join("\n", @icons);
+close (FILE);
