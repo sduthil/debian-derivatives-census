@@ -18,4 +18,4 @@ close FILE;
 
 open (FILE, "> $ARGV[1]") or exit 0;
 print FILE join("\n", @feeds);
-close (MYFILE);
+close (FILE);
