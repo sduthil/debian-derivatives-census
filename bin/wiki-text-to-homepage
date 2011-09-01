@@ -1,0 +1,8 @@
+#!/bin/sh
+
+# Copyright 2011 Paul Wise
+# Released under the MIT/Expat license, see doc/COPYING
+
+set -e
+sed -r -n -e 's/^ *\* *Homepage: (.*)/\1/p' "$1" | tr ' ' '\n' > "$2"
+find "$2" -empty -delete
