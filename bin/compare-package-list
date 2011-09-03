@@ -51,14 +51,16 @@ for source in source_entries:
 			else:
 				dsc = dsc[0]
 				hash = dsc['sha1']
-				cur.execute('SELECT count(hash) FROM file WHERE hash=%s;', (hash,))
-				check_hashes = not cur.fetchone()[0]
+				cur.execute('SELECT hash FROM file WHERE hash=%s LIMIT 1;', (hash,))
+				res = cur.fetchone()
+				check_hashes = not res
 			if check_hashes:
 				modified = 0
 				for part in [x for x in srcpkg['Checksums-Sha1'] if not x['name'].endswith('.dsc')]:
 					hash = part['sha1']
-					cur.execute('SELECT count(hash) FROM file WHERE hash=%s;', (hash,))
-					if not cur.fetchone()[0]: modified += 1
+					cur.execute('SELECT hash FROM file WHERE hash=%s LIMIT 1;', (hash,))
+					res = cur.fetchone()
+					if not res: modified += 1
 				if modified:
 					url = '%s/%s' % (s.archive_uri(srcpkg['Directory']), dsc['name'])
 					if name not in modified_packages:
