@@ -36,7 +36,10 @@ source_entries = [[i for i in x.index_files if i.label=='Debian Source Index'] f
 for source in source_entries:
 	for s in source:
 		fn = os.path.join(lists_dir, s.describe.rstrip(')').rpartition('(')[2])
-		f = file(fn)
+		try: f = file(fn)
+		except:
+			print 'missing Sources file %s' % fn
+			continue
 		for srcpkg in debian.deb822.Sources.iter_paragraphs(f):
 			name = srcpkg['Package']
 			version = srcpkg['Version']
@@ -61,7 +64,10 @@ for source in source_entries:
 for binary in binary_entries:
 	for b in binary:
 		fn = os.path.join(lists_dir, b.describe.rstrip(')').rpartition('(')[2])
-		f = file(fn)
+		try: f = file(fn)
+		except:
+			print 'missing Packages file %s' % fn
+			continue
 		for binpkg in debian.deb822.Sources.iter_paragraphs(f):
 			name = binpkg['Package']
 			version = binpkg['Version']
