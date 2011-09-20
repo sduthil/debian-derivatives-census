@@ -14,6 +14,7 @@ binary_hash_types = {'MD5': ('MD5sum', 32), 'SHA-1': ('SHA1', 40), 'SHA-256': ('
 
 # Init
 apt_pkg.init()
+output = file(os.path.abspath(sys.argv[3]), 'wb')
 
 # Setup configuration
 apt_pkg.config.set('Dir', os.path.abspath(sys.argv[2]))
@@ -38,26 +39,26 @@ for source in source_entries:
 		fn = os.path.join(lists_dir, s.describe.rstrip(')').rpartition('(')[2])
 		try: f = file(fn)
 		except:
-			print 'missing Sources file %s' % fn
+			print >>output, 'missing Sources file %s' % fn
 			continue
 		for srcpkg in debian.deb822.Sources.iter_paragraphs(f):
 			name = srcpkg['Package']
 			version = srcpkg['Version']
 			for type, (header, size, short_type) in source_hash_types.items():
 				if header not in srcpkg:
-					print 'source %s %s: no %s hash' % (name, version, type)
+					print >>output, 'source %s %s: no %s hash' % (name, version, type)
 					continue
 				for x in srcpkg[header]:
 					if len(x[short_type]) != size:
-						print 'source %s %s: %s: %s hash has unexpected size %s instead of %s' % (name, version, x['name'], type, len(x[short_type]), size)
+						print >>output, 'source %s %s: %s: %s hash has unexpected size %s instead of %s' % (name, version, x['name'], type, len(x[short_type]), size)
 					try: int(x[short_type], 16)
-					except: print 'binary %s %s: %s hash is not a proper hexadecimal hash string (%s)' % (name, version, x['name'], type, x[short_type])
+					except: print >>output, 'binary %s %s: %s hash is not a proper hexadecimal hash string (%s)' % (name, version, x['name'], type, x[short_type])
 				dsc = [x for x in srcpkg[header] if x['name'].endswith('.dsc')]
 				if not len(dsc):
-					print 'source %s %s: %s hashes but no hash for the dsc file' % (name, version, type)
+					print >>output, 'source %s %s: %s hashes but no hash for the dsc file' % (name, version, type)
 					continue
 				elif len(dsc) > 1:
-					print 'source %s %s: multiple dsc files and %s hashes for them' % (name, version, type)
+					print >>output, 'source %s %s: multiple dsc files and %s hashes for them' % (name, version, type)
 					continue
 		f.close()
 
@@ -66,17 +67,19 @@ for binary in binary_entries:
 		fn = os.path.join(lists_dir, b.describe.rstrip(')').rpartition('(')[2])
 		try: f = file(fn)
 		except:
-			print 'missing Packages file %s' % fn
+			print >>output, 'missing Packages file %s' % fn
 			continue
 		for binpkg in debian.deb822.Sources.iter_paragraphs(f):
 			name = binpkg['Package']
 			version = binpkg['Version']
 			for type, (header, size) in binary_hash_types.items():
 				if header not in binpkg:
-					print 'binary %s %s: no %s hash' % (name, version, type)
+					print >>output, 'binary %s %s: no %s hash' % (name, version, type)
 					continue
 				if len(binpkg[header]) != size:
-					print 'binary %s %s: %s hash has unexpected size %s instead of %s' % (name, version, type, len(binpkg[header]), size)
+					print >>output, 'binary %s %s: %s hash has unexpected size %s instead of %s' % (name, version, type, len(binpkg[header]), size)
 				try: int(binpkg[header], 16)
-				except: print 'binary %s %s: %s hash is not a proper hexadecimal hash string (%s)' % (name, version, type, binpkg[header])
+				except: print >>output, 'binary %s %s: %s hash is not a proper hexadecimal hash string (%s)' % (name, version, type, binpkg[header])
 		f.close()
+
+output.close()

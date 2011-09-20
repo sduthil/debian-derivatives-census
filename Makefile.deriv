@@ -74,4 +74,4 @@ blogs-dev-rss: blogs-dev
 check: check-package-list
 
 check-package-list: sources.list apt
-	check-package-list $^
+	check-package-list $^ $@
