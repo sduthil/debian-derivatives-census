@@ -34,6 +34,25 @@ lists_dir = apt_pkg.config.find_dir('Dir::State::lists')
 binary_entries = [[i for i in x.index_files if i.label=='Debian Package Index'] for x in sources_list.list]
 source_entries = [[i for i in x.index_files if i.label=='Debian Source Index'] for x in sources_list.list]
 
+# FIXME: switch to lintian-style output with tags and descriptions
+# FIXME: add some checks for the following information:
+# modified dsc but unmodified parts
+# unmodified dsc but modified parts (broken source package or checksums)
+# less files than the Debian srcpkg
+# using Release+Release.gpg instead of InRelease files
+# unsigned Release files
+# missing hashes in Release files
+# Components from Release files not listed in hashes
+# Components from Release files not listed in sources.list
+# missing Valid-Until/Date in Release files
+# Codename is the same as Suite in Release files
+# Architectures in Release files not in the list of Debian-supported ones
+# No Origin/Label/Description in Release files
+# Unknown fields in Release/Packages/Sources files
+# Run lintian over the dsc and deb files
+# Sources lists not matching Packages lists
+# Empty Release/Packages/Sources files
+
 for source in source_entries:
 	for s in source:
 		fn = os.path.join(lists_dir, s.describe.rstrip(')').rpartition('(')[2])
