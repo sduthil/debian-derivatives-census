@@ -5,5 +5,5 @@
 
 cat "$1" \
 | grep -o '<a class="include-page-link" href="\([^"]*\)">' \
-| sed -n -e 's_<a class="include-page-link" href="/Derivatives/Census/\([^"]*\)">_\1_gp' \
+| sed -n -e 's|<a class="include-page-link" href="/Derivatives/Census/\([-_A-Za-z0-9]*\)">|\1|gp' \
 > "$2"
