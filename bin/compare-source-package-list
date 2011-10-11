@@ -1,0 +1,796 @@
+#!/usr/bin/python
+
+# Copyright 2011 Paul Wise
+# Released under the MIT/Expat license, see doc/COPYING
+
+# FIXME: write out some statistics and rrdtool graphs
+# FIXME: comment the code to list assumptions and function purpose
+# FIXME: add options to allow re-processing only specific packages
+# FIXME: write something to clean up old files and patches
+# FIXME: don't unpack or make a patch when we don't have all the parts
+# FIXME: don't make a patch when we were not able to unpack the source package
+# FIXME: deal with permissions errors on unpack??
+# FIXME: gzip: stdout: Broken pipe on BlankOn libdbusmenu 0.4.3-0ubuntu3
+# FIXME: skip lzip encoded files??
+# FIXME: cache changelog version numbers to skip dpkg-source -x
+# FIXME: check for missing sha1 hashes (symlink targets) when checking the md5/sha256 caches
+# FIXME: cleanup files at start of run
+# FIXME: handle BadStatusLine and other httplib exceptions
+# FIXME: grab the code from merge-o-matic to extract debian/patches/ patches
+
+import os
+import sys
+import urllib2
+import hashlib
+import shutil
+import logging
+import tempfile
+import subprocess
+import yaml
+from debian import deb822, changelog
+import apt_pkg
+import psycopg2
+try: import cjson as json
+except: import json
+
+# Helper functions for python stuff with annoying error handling
+
+def makedirs(dirs):
+	try: os.makedirs(dirs)
+	except OSError: pass
+
+def rmtree(dir):
+	try: shutil.rmtree(dir)
+	except OSError: pass
+
+def remove(file):
+	try: os.remove(file)
+	except OSError: pass
+
+def symlink(source, link):
+	try: os.symlink(source, link)
+	except OSError: pass
+
+# Config
+md5_cache_dir = os.path.abspath('../md5-farm')
+sha1_cache_dir = os.path.abspath('../sha1-farm')
+sha256_cache_dir = os.path.abspath('../sha256-farm')
+sha1_patch_dir = os.path.abspath('../sha1-patches')
+sha1_changelog_dir = os.path.abspath('../sha1-changelog')
+deriv_patch_dir = os.path.abspath('patches')
+global_patch_dir = os.path.abspath('../patches')
+snapshot_cache_dir = '/srv/snapshot.debian.org/farm'
+checksum_headers = ('Checksums-Sha1', 'Checksums-Sha256', 'Files')
+user_agent = 'Debian Derivatives Census QA bot'
+
+# Init
+apt_pkg.init()
+
+# Setup configuration
+apt_pkg.config.set('Dir', os.path.abspath(sys.argv[2]))
+apt_pkg.config.set('Dir::Etc', os.path.abspath(sys.argv[2]))
+apt_pkg.config.set('Dir::State', os.path.abspath(sys.argv[2]))
+apt_pkg.config.set('Dir::Cache', os.path.abspath(sys.argv[2]))
+apt_pkg.config.set('Dir::State::status', os.path.abspath(os.path.join(sys.argv[2],'status')))
+apt_pkg.config.set('Dir::Etc::sourcelist', os.path.abspath(sys.argv[1]))
+apt_pkg.config.set('Dir::Bin::gpg', 'fakegpgv')
+
+# Preparation
+sources_list = apt_pkg.SourceList()
+sources_list.read_main_list()
+conn = psycopg2.connect("host=localhost port=5433 dbname=snapshot user=guest")
+cur = conn.cursor()
+remove(sys.argv[6])
+logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.DEBUG, filename=sys.argv[6])
+
+# Voodoo
+lists_dir = apt_pkg.config.find_dir('Dir::State::lists')
+source_entries = [[i for i in x.index_files if i.label=='Debian Source Index'] for x in sources_list.list]
+derivative_short_name = os.path.basename(os.getcwd())
+modifies_dsc_files = 0
+repackaged_but_identical = 0
+
+# Helper functions for generating path names
+
+def hash_path_parent(dir, hash):
+	return os.path.join(dir, hash[0:2], hash[2:4])
+
+def hash_path(dir, hash):
+	return os.path.join(dir, hash[0:2], hash[2:4], hash)
+
+def hash_path_exists(dir, hash):
+	return os.path.exists(os.path.join(dir, hash[0:2], hash[2:4], hash))
+
+def sha1_patch_path(debian_dsc_sha1, dsc_sha1, type=None):
+	path = os.path.join(hash_path(sha1_patch_dir, debian_dsc_sha1), hash_path('', dsc_sha1))
+	if type: path += '.%s' % type
+	path += '.patch'
+	return os.path.abspath(path)
+
+def shortslug(name):
+	return name[:4] if name.startswith('lib') else name[0]
+
+def deriv_patch_path(name, version, debian_name, debian_version, type=None):
+	path = os.path.join(deriv_patch_dir, shortslug(debian_name), debian_name, '')
+	path += '_'.join((debian_name, debian_version, name, version))
+	if type: path += '.%s' % type
+	path += '.patch'
+	return os.path.abspath(path)
+
+def global_patch_path(name, version, debian_name, debian_version, type=None):
+	path = os.path.join(global_patch_dir, shortslug(debian_name), debian_name, '')
+	path += '_'.join(('Debian', debian_name, debian_version, derivative_short_name, name, version))
+	if type: path += '.%s' % type
+	path += '.patch'
+	return os.path.abspath(path)
+
+# Functions for downloading files and storing them in the hash caches
+
+def download_and_check_hash(url, dir, hash, hash_type):
+	try:
+		parent = hash_path_parent(dir,hash)
+		path = hash_path(dir,hash)
+		logging.debug('downloading %s', url)
+		makedirs(parent)
+		headers = { 'User-Agent' : user_agent }
+		req = urllib2.Request(url, None, headers)
+		u = urllib2.urlopen(req)
+		data = u.read()
+		if hash_type == 'sha256':
+			data_hash = hashlib.sha256(data).hexdigest()
+		elif hash_type == 'md5sum':
+			data_hash = hashlib.md5(data).hexdigest()
+		else:
+			logging.warning('unknown hash type detected: %s %s %s', hash_type, hash, url)
+			return ('unknown', None)
+		if data_hash == hash:
+			logging.debug('correct hash for downloaded file, saving: %s %s %s', hash_type, hash, url)
+			f = open(path, 'w')
+			f.write(data)
+			f.close()
+		else:
+			logging.warning('incorrect hash for downloaded file, ignoring: %s %s != %s %s', hash_type, hash, data_hash, url)
+			return ('unknown', None)
+		sha1 = hashlib.sha1(data).hexdigest()
+		del data
+		sha1_path = hash_path(sha1_cache_dir, sha1)
+		sha1_parent = hash_path_parent(sha1_cache_dir, sha1)
+		makedirs(sha1_parent)
+		if hash_path_exists(snapshot_cache_dir, sha1):
+			snapshot_path = hash_path(snapshot_cache_dir, sha1)
+			remove(path)
+			os.symlink(snapshot_path, path)
+			symlink(snapshot_path, sha1_path)
+			logging.debug('exists in snapshot sha1 cache: %s %s %s %s', hash_type, hash, sha1, url)
+			return (True, sha1)
+		else:
+			# FIXME: traceback here with blankon
+			os.rename(path, sha1_path)
+			os.symlink(os.path.relpath(sha1_path, os.path.dirname(path)), path)
+			logging.debug('does not exist in snapshot sha1 cache: %s %s %s %s', hash_type, hash, sha1, url)
+			return (False, sha1)
+	except urllib2.URLError, e:
+		if hasattr(e, 'reason'): reason = e.reason
+		elif hasattr(e, 'code'): reason = e.code
+		else: reason = e
+		logging.warning('unable to download hash file, ignoring: %s %s', reason, url)
+		return ('unknown', None)
+
+def download_sha1(url, dir, sha1):
+	try:
+		parent = hash_path_parent(dir,sha1)
+		path = hash_path(dir,sha1)
+		logging.debug('downloading sha1: %s %s', sha1, url)
+		makedirs(parent)
+		headers = { 'User-Agent' : user_agent }
+		req = urllib2.Request(url, None, headers)
+		u = urllib2.urlopen(req)
+		data = u.read()
+		data_sha1 = hashlib.sha1(data).hexdigest()
+		if data_sha1 == sha1:
+			logging.debug('correct sha1 for downloaded file, saving: %s %s', sha1, url)
+			f = open(path, 'w')
+			f.write(data)
+			f.close()
+			return (False, sha1)
+		else:
+			logging.warning('incorrect sha1 for downloaded file, ignoring: %s != %s %s', sha1, data_sha1, url)
+			return ('unknown', None)
+	except urllib2.URLError, e:
+		if hasattr(e, 'reason'): reason = e.reason
+		elif hasattr(e, 'code'): reason = e.code
+		else: reason = e
+		logging.warning('unable to download sha1 file, ignoring: %s %s', reason, url)
+		return ('unknown', None)
+
+# Functions for checking the hash caches
+
+def check_hash_cache(dir, hash, hash_type, url):
+	logging.debug('checking hash cache: %s %s', hash_type, hash)
+	path = hash_path(dir, hash)
+	try:
+		result = os.readlink(path)
+		path = os.path.join(os.path.dirname(path), result)
+	except:
+		logging.debug('does not exist in hash cache: %s %s', hash_type, hash)
+		return download_and_check_hash(url, dir, hash, hash_type)
+	logging.debug('exists in hash cache: %s %s', hash_type, hash)
+	return (path.startswith(snapshot_cache_dir), os.path.basename(path))
+
+def check_sha1_cache(sha1, url):
+	logging.debug('checking sha1 caches: %s', sha1)
+	if hash_path_exists(snapshot_cache_dir, sha1):
+		logging.debug('exists in snapshot sha1 cache: %s', sha1)
+		return (True, sha1)
+	elif hash_path_exists(sha1_cache_dir, sha1):
+		logging.debug('exists in derivatives sha1 cache: %s', sha1)
+		return (False, sha1)
+	else:
+		logging.debug('does not exist in any sha1 caches: %s', sha1)
+		return download_sha1(url, sha1_cache_dir, sha1)
+
+def status(type, hash, url):
+	logging.debug('checking status of hash: %s %s %s', type, hash, url)
+	if type == 'sha1':
+		(ret, sha1) = check_sha1_cache(hash, url)
+		if ret == True:
+			return ('unmodified', sha1)
+		elif ret == False:
+			return ('modified', sha1)
+		else:
+			return (ret, sha1)
+	elif type == 'sha256':
+		(ret, sha1) = check_hash_cache(sha256_cache_dir, hash, type, url)
+		if ret == True:
+			return ('unmodified', sha1)
+		elif ret == False:
+			return ('modified', sha1)
+		else:
+			return (ret, sha1)
+	elif type == 'md5sum':
+		(ret, sha1) = check_hash_cache(md5_cache_dir, hash, type, url)
+		if ret == True:
+			return ('unmodified', sha1)
+		elif ret == False:
+			return ('modified', sha1)
+		else:
+			return (ret, sha1)
+	else:
+		logging.warning('unknown hash type detected: %s %s %s', type, hash, url)
+		return ('unknown', None)
+
+# Functions for getting information about source packages
+
+def get_info(srcpkg):
+	dsc = None
+	for header in checksum_headers:
+		if not dsc and header in srcpkg:
+			dsc = [x for x in srcpkg[header] if x['name'].endswith('.dsc')]
+	if not dsc or len(dsc) > 1:
+		return None
+	dsc = dsc[0]
+	dsc_name = dsc['name']
+	dsc_hash_type, dsc_hash =  [(k, v) for k, v in dsc.iteritems() if k not in ('name', 'size')][0]
+
+	parts = []
+	part_names = []
+	for header in checksum_headers:
+		if header in srcpkg:
+			for part in srcpkg[header]:
+				if 'name' in part and part['name'] not in part_names and not part['name'].endswith('.dsc'):
+					parts.append(part)
+					part_names.append(part['name'])
+
+	return (dsc_hash_type, dsc_hash, dsc_name, parts)
+
+def get_debian_info(files):
+	dsc = [file for file in files if file[0].endswith('.dsc')]
+	if not dsc or len(dsc) > 1:
+		return None
+	dsc = dsc[0]
+	dsc_name, dsc_sha1 = dsc
+
+	parts = []
+	part_names = []
+	for file in files:
+		part_name, part_sha1 = file
+		if part_name not in part_names and not part_name.endswith('.dsc'):
+			parts.append(file)
+			part_names.append(part_name)
+
+	return (dsc_sha1, dsc_name, parts)
+
+# Functions for extracting information from the snapshots database
+
+def srcpkg_was_in_debian(name, version=None):
+	if version:
+		cur.execute('SELECT version FROM srcpkg WHERE name=%s AND version=%s LIMIT 1;', (name, version))
+		return not not cur.fetchone()
+	else:
+		cur.execute('SELECT version FROM srcpkg WHERE name=%s LIMIT 1;', (name,))
+		return not not cur.fetchone()
+
+def sha1_to_srcpkgs(sha1):
+	cur.execute(
+		'''SELECT name, version
+		FROM srcpkg
+		JOIN file_srcpkg_mapping ON file_srcpkg_mapping.srcpkg_id=srcpkg.srcpkg_id
+		WHERE hash=%s;''', (sha1,))
+	return cur.fetchall()
+
+def srcpkg_to_sha1s(name, version):
+	cur.execute(
+		'''SELECT hash
+		FROM file_srcpkg_mapping
+		JOIN srcpkg ON srcpkg.srcpkg_id=file_srcpkg_mapping.srcpkg_id
+		WHERE name=%s AND version=%s;''', (name, version))
+	return cur.fetchall()
+
+def srcpkg_to_srcpkgs(name):
+	cur.execute(
+		'''SELECT name, version
+		FROM srcpkg
+		WHERE name=%s ORDER BY version DESC;''', (name,))
+	return cur.fetchall()
+
+def sha1s_to_files(sha1):
+	cur.execute('SELECT DISTINCT ON (name, hash) name, hash FROM file WHERE hash=%s;', hash)
+	return cur.fetchall()
+
+def srcpkg_to_files(name, version):
+	cur.execute(
+		'''SELECT DISTINCT ON (file.name, file.hash) file.name, file.hash
+		FROM file_srcpkg_mapping
+		JOIN srcpkg ON srcpkg.srcpkg_id=file_srcpkg_mapping.srcpkg_id
+		JOIN file ON file_srcpkg_mapping.hash=file.hash
+		WHERE srcpkg.name=%s AND srcpkg.version=%s;''', (name, version))
+	return cur.fetchall()
+
+def sha1_version_to_derived_from(sha1, version):
+	cur.execute(
+		'''SELECT name, version
+		FROM srcpkg
+		JOIN file_srcpkg_mapping ON file_srcpkg_mapping.srcpkg_id=srcpkg.srcpkg_id
+		WHERE hash=%s and version<=%s
+		ORDER BY name ASC, version DESC
+		LIMIT 1;''', (sha1, version))
+	res = cur.fetchall()
+	if res: return res
+	cur.execute(
+		'''SELECT name, version
+		FROM srcpkg
+		JOIN file_srcpkg_mapping ON file_srcpkg_mapping.srcpkg_id=srcpkg.srcpkg_id
+		WHERE hash=%s
+		ORDER BY name ASC, version ASC
+		LIMIT 1;''', (sha1, version))
+	return cur.fetchall()
+
+def srcpkg_to_derived_from(name, version):
+	cur.execute(
+		'''SELECT name, version
+		FROM srcpkg
+		WHERE name=%s and version<=%s
+		ORDER BY version DESC
+		LIMIT 1;''', (name, version))
+	res = cur.fetchall()
+	if res: return res
+	cur.execute(
+		'''SELECT name, version
+		FROM srcpkg
+		WHERE name=%s
+		ORDER BY version ASC
+		LIMIT 1;''', (name,))
+	return cur.fetchall()
+
+# Functions related to creating patches
+
+# Add symlinks for all needed files
+def prepare(dsc_name, dsc_sha1, parts):
+	logging.debug('preparing deriv directory for %s', dsc_name)
+	tmp_dir = tempfile.mkdtemp(prefix='derivs-cmp-srcpkg-%s-' % derivative_short_name)
+	path = hash_path(snapshot_cache_dir, dsc_sha1)
+	if not os.path.exists(path): path = hash_path(sha1_cache_dir, dsc_sha1)
+	path = hash_path(sha1_cache_dir, dsc_sha1)
+	dsc_path = os.path.join(tmp_dir, dsc_name)
+	os.symlink(path, dsc_path)
+	for part in parts:
+		if 'sha1' in part:
+			path = hash_path(snapshot_cache_dir, part['sha1'])
+			if not os.path.exists(path): path = hash_path(sha1_cache_dir, part['sha1'])
+		elif 'sha256' in part: path = hash_path(sha256_cache_dir, part['sha256'])
+		elif 'md5sum' in part: path = hash_path(md5_cache_dir, part['md5sum'])
+		part_path = os.path.join(tmp_dir, part['name'])
+		os.symlink(path, part_path)
+	return tmp_dir
+
+def prepare_debian(dsc_name, dsc_sha1, files):
+	logging.debug('preparing Debian directory for %s', dsc_name)
+	debian_tmp_dir = tempfile.mkdtemp(prefix='derivs-cmp-srcpkg-Debian-')
+	path = hash_path(snapshot_cache_dir, dsc_sha1)
+	dsc_path = os.path.join(debian_tmp_dir, dsc_name)
+	os.symlink(path, dsc_path)
+	for file in files:
+		part_name, part_sha1 = file
+		path = hash_path(snapshot_cache_dir, part_sha1)
+		part_path = os.path.join(debian_tmp_dir, part_name)
+		os.symlink(path, part_path)
+	return debian_tmp_dir
+
+def get_changelog_entries(tmp_dir, dsc_name):
+	logging.debug('getting changelog entries from %s', dsc_name)
+
+	# Preparation
+	extract_path = os.path.join(tmp_dir,'extracted')
+	dsc_path = os.path.join(tmp_dir,dsc_name)
+
+	# Unpack the source tree
+	logging.debug('unpacking source package %s', dsc_name)
+	cmdline = ['dpkg-source', '-x', dsc_path, extract_path]
+	process = subprocess.Popen(cmdline, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+	output = process.communicate()[0]
+	if process.returncode:
+		logging.warning('dpkg-source reported failure to extract %s to %s:', dsc_name, extract_path)
+		logging.warning(output)
+		cmdline = ['ls', '-lR', tmp_dir, dsc_path, extract_path]
+		process = subprocess.Popen(cmdline, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+		output = process.communicate()[0]
+		logging.warning(output)
+		#FIXME: disable in production
+		#rmtree(extract_path)
+		return None
+
+	# FIXME: sanitise the debian dir and changelog file in case it is a symlink to outside
+	changelog_filename = os.path.join(extract_path, 'debian','changelog')
+	if not os.path.exists(changelog_filename):
+		logging.warning('could not find changelog in %s %s', dsc_name, extract_path)
+		# FIXME: disable in production
+		#rmtree(extract_path)
+		return None
+
+	# Find out which source package is the most likely derivative
+	logging.debug('parsing changelog %s', changelog_filename)
+	changelog_file = open(changelog_filename)
+	changelog_obj = changelog.Changelog(changelog_file)
+	try:
+		changelog_entries = [(entry.package, str(entry._raw_version)) for entry in changelog_obj]
+	except:
+		logging.warning('could not read changelog from %s %s', dsc_name, extract_path)
+		# FIXME: disable in production
+		#rmtree(extract_path)
+		return None
+	del changelog_obj
+	changelog_file.close()
+
+	# Clean up again
+	rmtree(extract_path)
+
+	return changelog_entries
+
+# Find the source package name and version this is probably derived from
+def find_derived_from(tmp_dir, name, version, dsc_name, parts_unmodified):
+	logging.debug('finding base source package of %s %s', name, version)
+
+	# Get a list of changelog entries
+	changelog_entries = get_changelog_entries(tmp_dir, dsc_name)
+
+	# Get a list of candidate versions from the database
+	possibly_derived_from = []
+	for part_sha1, part_name in parts_unmodified:
+		possibly_derived_from.extend(sha1_to_srcpkgs(part_sha1))
+
+	if not possibly_derived_from:
+		possibly_derived_from = srcpkg_to_srcpkgs(name)
+
+	# Uniqify
+	possibly_derived_from = list(set(possibly_derived_from))
+
+	# Match changelog versions against candidates
+	if changelog_entries:
+		for entry in changelog_entries:
+			if entry in possibly_derived_from:
+				return entry
+		for entry_name, entry_version in changelog_entries:
+			if srcpkg_was_in_debian(entry_name, entry_version):
+				return entry
+	if possibly_derived_from:
+		possibly_derived_from.sort(cmp=lambda a,b: apt_pkg.version_compare(b[1],a[1]))
+		for entry_name, entry_version in possibly_derived_from:
+			if name == entry_name and apt_pkg.version_compare(version, entry_version) <= 0:
+				return (entry_name, entry_version)
+		return possibly_derived_from[-1]
+	for entry in srcpkg_to_derived_from(name, version):
+		return entry
+	return None
+
+# Generate a patch file
+def create_patch(tmp_dir, dsc_name, dsc_sha1, debian_tmp_dir, debian_dsc_name, debian_dsc_sha1):
+	# FIXME: sanitize the dsc contents, since it could be evil?
+	global repackaged_but_identical
+
+	dsc_path = os.path.join(tmp_dir, dsc_name)
+	debian_dsc_path = os.path.join(debian_tmp_dir, debian_dsc_name)
+	path_everything = sha1_patch_path(debian_dsc_sha1, dsc_sha1)
+	path_debian = sha1_patch_path(debian_dsc_sha1, dsc_sha1, 'debian')
+	path_filtered = sha1_patch_path(debian_dsc_sha1, dsc_sha1, 'filtered')
+	path_debian_filtered = sha1_patch_path(debian_dsc_sha1, dsc_sha1, 'debian-filtered')
+
+	# Generate the main patch
+	if not os.path.exists(path_everything) and os.path.exists(debian_dsc_path) and os.path.exists(dsc_path):
+		makedirs(os.path.dirname(path_everything))
+		cmdline = ['debdiff', '--quiet', '--diffstat', debian_dsc_path, dsc_path]
+		stdout = open(path_everything, 'w')
+		process = subprocess.Popen(cmdline, stdout=stdout, stderr=subprocess.PIPE)
+		output = process.communicate()[1]
+		stdout.close()
+		if process.returncode == 255:
+			logging.warning('debdiff reported failure %s %s:', debian_dsc_name, dsc_name)
+			logging.warning(output)
+			return False
+		elif process.returncode == 0:
+			logging.info('derivative repackaged in an identical way %s %s', debian_dsc_name, dsc_name)
+			repackaged_but_identical += 1
+			return False
+		elif process.returncode != 1:
+			logging.warning('debdiff reported unknown return code %s %s %s:', process.returncode, debian_dsc_name, dsc_name)
+			logging.warning(output)
+			return False
+
+	# Filter the main patch to include only the debian/ directory
+	if os.path.exists(path_everything) and not os.path.exists(path_debian):
+		makedirs(os.path.dirname(path_debian))
+		cmdline = ['filterdiff', '--include=*/debian/*', path_everything]
+		stdout = open(path_debian, 'w')
+		subprocess.call(cmdline, stdout=stdout)
+		stdout.close()
+
+	# FIXME: Filter the main patch by removing external and generated files
+	# This will remove standard autotools cruft and debian/ dir cruft
+	#filterdiff --exclude cruft < sha1patches/$debian_dsc_sha1-$deriv_dsc_sha1.patch > sha1patches/$debian_dsc_sha1-$deriv_dsc_sha1-filtered.patch
+	#filterdiff --exclude * --exclude cruft --include debian --exclude debian-cruft < sha1patches/$debian_dsc_sha1-$deriv_dsc_sha1.patch > sha1patches/$debian_dsc_sha1-$deriv_dsc_sha1-debian-filtered.patch
+
+	return True
+
+def check_patch(patch):
+	cmdline = ['lsdiff', patch]
+	process = subprocess.Popen(cmdline, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+	output = process.communicate()[0].splitlines()
+	for line in output:
+		if line != 'debian/changelog' and not line.endswith('/debian/changelog'):
+			return True
+	return False
+
+def present_patch(name, version, dsc_sha1, debian_name, debian_version,  debian_dsc_sha1):
+	useful_patch = check_patch(sha1_patch_path(debian_dsc_sha1, dsc_sha1))
+	patches = []
+	# FIXME: enable the filtered ones when we have a list of ignorables
+	#types = ('', 'debian',  'filtered', 'debian.filtered')
+	types = ('', 'debian')
+	for type in types:
+		ln_to = sha1_patch_path(debian_dsc_sha1, dsc_sha1, type)
+		if not os.path.exists(ln_to):
+			continue
+		ln_from_deriv = deriv_patch_path(name, version, debian_name, debian_version, type)
+		ln_from_global = global_patch_path(name, version, debian_name, debian_version, type)
+		makedirs(os.path.dirname(ln_from_deriv))
+		makedirs(os.path.dirname(ln_from_global))
+		remove(ln_from_deriv)
+		remove(ln_from_global)
+		os.symlink(os.path.relpath(ln_to, os.path.dirname(ln_from_deriv)), ln_from_deriv)
+		os.symlink(os.path.relpath(ln_to, os.path.dirname(ln_from_global)), ln_from_global)
+		if useful_patch:
+			patches.append(os.path.relpath(ln_from_global, os.path.abspath(global_patch_dir)))
+	return tuple(patches)
+
+# Functions that wrap other functions and decide what to do
+
+def check_source_package(source_entry, srcpkg):
+	global modifies_dsc_files
+
+	# FIXME: sanitise some variables that are used in filesystem access
+	# name
+	# version
+	# dir
+	# dsc_name
+	# dsc_hash
+	# dsc_hash_type
+	# dsc_url
+	# part['name']
+	# part[hash_type]
+	try:
+		name = None
+		version = None
+		dir = None
+		name = srcpkg['Package']
+		version = srcpkg['Version']
+		dir = srcpkg['Directory']
+	except:
+		logging.warning('could not process source package %s %s', name, version)
+		return None
+	logging.debug('started processing source package %s %s', name, version)
+	info = get_info(srcpkg)
+	if not info:
+		logging.warning('finished processing source package %s %s: could not get any info', name, version)
+		return None
+	dsc_hash_type, dsc_hash, dsc_name, parts = info
+	dsc_url = source_entry.archive_uri('%s/%s' % (dir, dsc_name))
+	logging.debug('found dsc file: %s %s %s', dsc_hash_type, dsc_hash, dsc_url)
+	dsc_status, dsc_sha1 = status(dsc_hash_type, dsc_hash, dsc_url)
+	logging.debug('checked dsc status: %s %s %s', dsc_status, dsc_sha1, dsc_url)
+	if dsc_status == 'unmodified':
+		# Ignore the srcpkg since we know it is was in Debian
+		# at one point and is hopefully therefore unmodified
+		logging.debug('finished processing source package %s %s: dsc unmodified', name, version)
+		return None
+	else:
+		parts_unmodified = []
+		parts_modified = parts_unknown = 0
+		for part in parts:
+			part_name = part['name']
+			part_url = source_entry.archive_uri('%s/%s' % (dir, part_name))
+			part_hash_type, part_hash = [(k, v) for k, v in part.iteritems() if k not in ('name', 'size')][0]
+			logging.debug('found part file: %s %s %s', part_hash_type, part_hash, part_url)
+			part_status, part_sha1 = status(part_hash_type, part_hash, part_url)
+			logging.debug('checked part status: %s %s %s', part_status, part_sha1, part_url)
+			if 'sha1' not in part and part_sha1: part['sha1'] = part_sha1
+			if part_status == 'unmodified': parts_unmodified.append((part_sha1, part_name))
+			elif part_status == 'modified': parts_modified += 1
+			else: parts_unknown += 1
+
+		all_parts_unmodified = (len(parts_unmodified) == len(parts))
+		all_parts_modified = (parts_modified == len(parts))
+		parts_unmodified = list(set(parts_unmodified))
+		logging.debug('source package status %s %s: dsc %s, %s parts unmodified, %s parts modified, %s parts unknown', name, version, dsc_status, len(parts_unmodified), parts_modified, parts_unknown)
+
+		if all_parts_unmodified:
+			# Ignore the srcpkg since we know all the parts were
+			# in Debian at one point and ergo, it is unmodified
+			logging.debug('finished processing source package %s %s: all non-dsc parts unmodified', name, version)
+			if dsc_status == 'modified':
+				logging.info('source package %s %s: unmodified, but dsc different', name, version)
+				modifies_dsc_files += 1
+			return None
+		else:
+			logging.debug('some parts modified, looking for derived version %s %s', name, version)
+			if not dsc_sha1:
+				logging.warning('finished processing source package %s %s: sha1 missing for dsc file', name, version)
+				return None
+			new = None
+			link = None
+			patch = None
+			tmp_dir = prepare(dsc_name, dsc_sha1, parts)
+			derived_from = find_derived_from(tmp_dir, name, version, dsc_name, parts_unmodified)
+			if derived_from:
+				debian_name, debian_version = derived_from
+				link = (debian_name, debian_version, name, version, dsc_url)
+				logging.debug('source package %s %s derived from %s %s', name, version, debian_name, debian_version)
+				debian_files = srcpkg_to_files(debian_name, debian_version)
+				if debian_files:
+					# FIXME: fix TypeError: 'NoneType' object is not iterable
+					debian_info = get_debian_info(debian_files)
+					if debian_info:
+						debian_dsc_sha1, debian_dsc_name, debian_parts = debian_info
+						logging.debug('Debian source package %s %s dsc found %s %s', debian_name, debian_version, debian_dsc_name, debian_dsc_sha1)
+						debian_tmp_dir = prepare_debian(debian_dsc_name, debian_dsc_sha1, debian_parts)
+						patch_created = create_patch(tmp_dir, dsc_name, dsc_sha1, debian_tmp_dir, debian_dsc_name, debian_dsc_sha1)
+						patch_names = present_patch(name, version, dsc_sha1, debian_name, debian_version, debian_dsc_sha1)
+						patch = (debian_name, debian_version, name, version) + patch_names
+						# FIXME: disable in production
+						if patch_created: rmtree(debian_tmp_dir)
+					else:
+						logging.warning('source package %s %s: could not get Debian info for %s %s: %s', name, version, debian_name, debian_version, debian_info)
+				else:
+					if srcpkg_was_in_debian(debian_name, debian_version):
+						logging.warning('source package %s %s: snapshot database issue, no Debian files found', debian_name, debian_version)
+			else:
+				new = (name, version, dsc_url)
+			rmtree(tmp_dir)
+			logging.debug('finished processing source package %s %s: all done', name, version)
+			return (patch, link, new)
+
+def process_sources(source_entries, lists_dir):
+	patches = []
+	links = []
+	new = []
+	for source in source_entries:
+		for source_entry in source:
+			fn = os.path.join(lists_dir, source_entry.describe.rstrip(')').rpartition('(')[2])
+			try: f = file(fn)
+			except: continue
+			for srcpkg in deb822.Sources.iter_paragraphs(f):
+				actions = check_source_package(source_entry, srcpkg)
+				if actions:
+					action_patch, action_link, action_new = actions
+					if action_patch:
+						patches.append(action_patch)
+						logging.debug('action: return patches %s', action_patch)
+					if action_link:
+						links.append(action_link)
+						logging.debug('action: return links to modified source packages %s', action_link)
+					if action_new:
+						new.append(action_new)
+						logging.debug('action: return links to new source packages %s', action_new)
+				logging.debug('done')
+				logging.debug('')
+			f.close()
+	return (patches, links, new)
+
+logging.debug('processing distribution %s', derivative_short_name)
+
+patches, links, new = process_sources(source_entries, lists_dir)
+
+# Done with the database, close the connection
+cur.close()
+conn.close()
+
+# Write out the results
+filename = sys.argv[3]
+data = patches
+if data:
+	data = list(set(data))
+	data.sort(cmp=lambda a,b: cmp(a[0],b[0]) or apt_pkg.version_compare(a[1],b[1]) or cmp(a[2],b[2]) or apt_pkg.version_compare(a[3],b[3]))
+	output_data = {}
+	output = file(os.path.abspath(filename), 'wb')
+	for item in data:
+		debian_name, debian_version, name, version = item[:4]
+		patches = item[4:]
+		debian_name = str(debian_name)
+		debian_version = str(debian_version)
+		if debian_name not in output_data:
+			output_data[debian_name] = {}
+		if debian_version not in output_data[debian_name]:
+			output_data[debian_name][debian_version] = []
+		item = {}
+		item['name'] = str(name)
+		item['version'] = str(version)
+		item['patches'] = [str(patch) for patch in patches]
+		output_data[debian_name][debian_version].append(item)
+	yaml.dump(output_data, output)
+	output.close()
+else:
+	remove(filename)
+
+filename = sys.argv[4]
+data = links
+if data:
+	data = list(set(data))
+	data.sort(cmp=lambda a,b: cmp(a[0],b[0]) or apt_pkg.version_compare(a[1],b[1]) or cmp(a[2],b[2]) or apt_pkg.version_compare(a[3],b[3]))
+	output_data = {}
+	output = file(os.path.abspath(filename), 'wb')
+	for debian_name, debian_version, name, version, dsc_url in data:
+		debian_name = str(debian_name)
+		debian_version = str(debian_version)
+		if debian_name not in output_data:
+			output_data[debian_name] = {}
+		if debian_version not in output_data[debian_name]:
+			output_data[debian_name][debian_version] = []
+		item = {}
+		item['name'] = str(name)
+		item['version'] = str(version)
+		item['dsc'] = str(dsc_url)
+		output_data[debian_name][debian_version].append(item)
+	yaml.dump(output_data, output)
+	output.close()
+else:
+	remove(filename)
+
+filename = sys.argv[5]
+data = new
+if data:
+	data = list(set(data))
+	data.sort(cmp=lambda a,b: cmp(a[0],b[0]) or apt_pkg.version_compare(a[1],b[1]) or cmp(a[2],b[2]))
+	output_data = {}
+	output = file(os.path.abspath(filename), 'wb')
+	for name, version, dsc_url in data:
+		name = str(name)
+		version = str(version)
+		if name not in output_data:
+			output_data[name] = {}
+		if version not in output_data[name]:
+			output_data[name][version] = []
+		output_data[name][version].append(str(dsc_url))
+	yaml.dump(output_data, output)
+	output.close()
+else:
+	remove(filename)
+
+logging.shutdown()

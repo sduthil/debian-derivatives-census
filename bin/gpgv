@@ -1,0 +1,6 @@
+#!/bin/sh
+
+# Copyright 2011 Paul Wise
+# Released under the MIT/Expat license, see doc/COPYING
+
+exit 0

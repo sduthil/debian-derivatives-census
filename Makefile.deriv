@@ -8,7 +8,6 @@ ALL = \
 	wiki.txt \
 	sources.list \
 	apt \
-	packages \
 	name \
 	homepage \
 	favicon \
@@ -38,8 +37,11 @@ apt: sources.list
 	touch $@/status $@/trusted.gpg
 	get-package-lists $^ $@
 
-packages: sources.list apt
-	compare-package-list $^ $@
+sources.patches sources.links sources.new sources.log: sources.stamp
+
+sources.stamp: sources.list apt
+	compare-source-package-list $^ sources.patches sources.links sources.new sources.log
+	touch $@
 
 name: wiki.txt
 	wiki-text-to-name $^ $@
