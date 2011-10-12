@@ -12,7 +12,6 @@
 # FIXME: deal with permissions errors on unpack??
 # FIXME: gzip: stdout: Broken pipe on BlankOn libdbusmenu 0.4.3-0ubuntu3
 # FIXME: skip lzip encoded files??
-# FIXME: cache changelog version numbers to skip dpkg-source -x
 # FIXME: check for missing sha1 hashes (symlink targets) when checking the md5/sha256 caches
 # FIXME: cleanup files at start of run
 # FIXME: handle BadStatusLine and other httplib exceptions
@@ -416,8 +415,17 @@ def prepare_debian(dsc_name, dsc_sha1, files):
 		os.symlink(path, part_path)
 	return debian_tmp_dir
 
-def get_changelog_entries(tmp_dir, dsc_name):
+def get_changelog_entries(tmp_dir, dsc_name, dsc_sha1):
 	logging.debug('getting changelog entries from %s', dsc_name)
+
+	# Cache check
+	changelog_path = hash_path(sha1_changelog_dir, dsc_sha1)
+	if os.path.exists(changelog_path):
+		logging.debug('changelog cache exists for %s %s', dsc_name, dsc_sha1)
+		f = file(changelog_path)
+		changelog_entries = json.load(f)
+		f.close()
+		return changelog_entries
 
 	# Preparation
 	extract_path = os.path.join(tmp_dir,'extracted')
@@ -464,14 +472,20 @@ def get_changelog_entries(tmp_dir, dsc_name):
 	# Clean up again
 	rmtree(extract_path)
 
+	# Write the cache
+	makedirs(hash_path_parent(sha1_changelog_dir, dsc_sha1))
+	f = file(changelog_path, 'w')
+	json.dump(changelog_entries, f)
+	f.close()
+
 	return changelog_entries
 
 # Find the source package name and version this is probably derived from
-def find_derived_from(tmp_dir, name, version, dsc_name, parts_unmodified):
+def find_derived_from(tmp_dir, name, version, dsc_name, dsc_sha1, parts_unmodified):
 	logging.debug('finding base source package of %s %s', name, version)
 
 	# Get a list of changelog entries
-	changelog_entries = get_changelog_entries(tmp_dir, dsc_name)
+	changelog_entries = get_changelog_entries(tmp_dir, dsc_name, dsc_sha1)
 
 	# Get a list of candidate versions from the database
 	possibly_derived_from = []
@@ -658,7 +672,7 @@ def check_source_package(source_entry, srcpkg):
 			link = None
 			patch = None
 			tmp_dir = prepare(dsc_name, dsc_sha1, parts)
-			derived_from = find_derived_from(tmp_dir, name, version, dsc_name, parts_unmodified)
+			derived_from = find_derived_from(tmp_dir, name, version, dsc_name, dsc_sha1, parts_unmodified)
 			if derived_from:
 				debian_name, debian_version = derived_from
 				link = (debian_name, debian_version, name, version, dsc_url)
