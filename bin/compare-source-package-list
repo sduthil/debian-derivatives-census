@@ -480,6 +480,7 @@ def get_changelog_entries(tmp_dir, dsc_name, dsc_sha1):
 		logging.debug('changelog cache exists for %s %s', dsc_name, dsc_sha1)
 		f = file(changelog_path)
 		changelog_entries = json.load(f)
+		changelog_entries = [tuple(entry) for entry in changelog_entries]
 		f.close()
 		return changelog_entries
 
