@@ -443,16 +443,14 @@ def get_changelog_entries(tmp_dir, dsc_name, dsc_sha1):
 		process = subprocess.Popen(cmdline, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 		output = process.communicate()[0]
 		logging.warning(output)
-		#FIXME: disable in production
-		#rmtree(extract_path)
+		rmtree(extract_path)
 		return None
 
 	# FIXME: sanitise the debian dir and changelog file in case it is a symlink to outside
 	changelog_filename = os.path.join(extract_path, 'debian','changelog')
 	if not os.path.exists(changelog_filename):
 		logging.warning('could not find changelog in %s %s', dsc_name, extract_path)
-		# FIXME: disable in production
-		#rmtree(extract_path)
+		rmtree(extract_path)
 		return None
 
 	# Find out which source package is the most likely derivative
@@ -463,8 +461,7 @@ def get_changelog_entries(tmp_dir, dsc_name, dsc_sha1):
 		changelog_entries = [(entry.package, str(entry._raw_version)) for entry in changelog_obj]
 	except:
 		logging.warning('could not read changelog from %s %s', dsc_name, extract_path)
-		# FIXME: disable in production
-		#rmtree(extract_path)
+		rmtree(extract_path)
 		return None
 	del changelog_obj
 	changelog_file.close()
@@ -688,8 +685,7 @@ def check_source_package(source_entry, srcpkg):
 						patch_created = create_patch(tmp_dir, dsc_name, dsc_sha1, debian_tmp_dir, debian_dsc_name, debian_dsc_sha1)
 						patch_names = present_patch(name, version, dsc_sha1, debian_name, debian_version, debian_dsc_sha1)
 						patch = (debian_name, debian_version, name, version) + patch_names
-						# FIXME: disable in production
-						if patch_created: rmtree(debian_tmp_dir)
+						rmtree(debian_tmp_dir)
 					else:
 						logging.warning('source package %s %s: could not get Debian info for %s %s: %s', name, version, debian_name, debian_version, debian_info)
 				else:
