@@ -143,30 +143,28 @@ def download_and_check_hash(url, dir, hash, hash_type):
 		else:
 			logging.warning('unknown hash type detected: %s %s %s', hash_type, hash, url)
 			return ('unknown', None)
-		if data_hash == hash:
-			logging.debug('correct hash for downloaded file, saving: %s %s %s', hash_type, hash, url)
-			f = open(path, 'w')
-			f.write(data)
-			f.close()
-		else:
+		if data_hash != hash:
 			logging.warning('incorrect hash for downloaded file, ignoring: %s %s != %s %s', hash_type, hash, data_hash, url)
 			return ('unknown', None)
 		sha1 = hashlib.sha1(data).hexdigest()
-		del data
 		sha1_path = hash_path(sha1_cache_dir, sha1)
 		sha1_parent = hash_path_parent(sha1_cache_dir, sha1)
 		makedirs(sha1_parent)
 		if hash_path_exists(snapshot_cache_dir, sha1):
 			snapshot_path = hash_path(snapshot_cache_dir, sha1)
-			remove(path)
-			os.symlink(snapshot_path, path)
+			symlink(snapshot_path, path)
 			symlink(snapshot_path, sha1_path)
 			logging.debug('exists in snapshot sha1 cache: %s %s %s %s', hash_type, hash, sha1, url)
 			return (True, sha1)
 		else:
-			# FIXME: traceback here with blankon
-			os.rename(path, sha1_path)
-			os.symlink(os.path.relpath(sha1_path, os.path.dirname(path)), path)
+			if not os.path.exists(sha1_path):
+				logging.debug('correct hash for downloaded file, saving: %s %s %s %s', hash_type, hash, sha1, url)
+				f = open(sha1_path, 'w')
+				f.write(data)
+				f.close()
+			else:
+				logging.debug('correct hash for downloaded file, not saving: already in derivs cache: %s %s %s %s', hash_type, hash, sha1, url)
+			symlink(os.path.relpath(sha1_path, os.path.dirname(path)), path)
 			logging.debug('does not exist in snapshot sha1 cache: %s %s %s %s', hash_type, hash, sha1, url)
 			return (False, sha1)
 	except urllib2.URLError, e:
@@ -192,9 +190,10 @@ def download_sha1(url, dir, sha1):
 		data_sha1 = hashlib.sha1(data).hexdigest()
 		if data_sha1 == sha1:
 			logging.debug('correct sha1 for downloaded file, saving: %s %s', sha1, url)
-			f = open(path, 'w')
-			f.write(data)
-			f.close()
+			if not os.path.exists(path):
+				f = open(path, 'w')
+				f.write(data)
+				f.close()
 			return (False, sha1)
 		else:
 			logging.warning('incorrect sha1 for downloaded file, ignoring: %s != %s %s', sha1, data_sha1, url)
