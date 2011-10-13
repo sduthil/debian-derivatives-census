@@ -496,7 +496,7 @@ def get_changelog_entries(tmp_dir, dsc_name, dsc_sha1):
 	if process.returncode:
 		logging.warning('dpkg-source reported failure to extract %s to %s:', dsc_name, extract_path)
 		logging.warning(output)
-		cmdline = ['ls', '-lR', tmp_dir, dsc_path, extract_path]
+		cmdline = ['ls', '-lR', tmp_dir]
 		process = subprocess.Popen(cmdline, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 		output = process.communicate()[0]
 		logging.warning(output)
