@@ -620,9 +620,17 @@ def create_patch(tmp_dir, dsc_name, dsc_sha1, debian_tmp_dir, debian_dsc_name, d
 	if os.path.exists(path_everything) and not os.path.exists(path_debian):
 		makedirs(os.path.dirname(path_debian))
 		cmdline = ['filterdiff', '--include=*/debian/*', path_everything]
-		stdout = open(path_debian, 'w')
-		subprocess.call(cmdline, stdout=stdout)
-		stdout.close()
+		filterdiff = subprocess.Popen(cmdline, stdout=subprocess.PIPE, preexec_fn=subprocess_setup)
+		filterdiff_output = filterdiff.communicate()[0]
+		diffstat = subprocess.Popen('diffstat', stdin=subprocess.PIPE, stdout=subprocess.PIPE, preexec_fn=subprocess_setup)
+		diffstat_output = diffstat.communicate(filterdiff_output)[0]
+		f = open(path_debian, 'w')
+		f.write('diffstat of debian/ for %s %s\n' % (os.path.splitext(debian_dsc_name)[0], os.path.splitext(dsc_name)[0]))
+		f.write('\n')
+		f.write(diffstat_output)
+		f.write('\n')
+		f.write(filterdiff_output)
+		f.close()
 
 	# FIXME: Filter the main patch by removing external and generated files
 	# This will remove standard autotools cruft and debian/ dir cruft
