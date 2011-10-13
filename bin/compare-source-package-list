@@ -772,6 +772,8 @@ def check_source_package(source_entry, srcpkg):
 				else:
 					if srcpkg_was_in_debian(debian_name, debian_version):
 						logging.warning('source package %s %s: snapshot database issue, no Debian files found', debian_name, debian_version)
+					else:
+						logging.warning('source package %s %s: derived from %s %s possibly bogus', name, version, debian_name, debian_version)
 			else:
 				new = (name, version, dsc_url)
 			rmtree(tmp_dir)
