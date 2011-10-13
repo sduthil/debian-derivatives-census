@@ -558,7 +558,7 @@ def find_derived_from(tmp_dir, name, version, dsc_name, dsc_sha1, parts_unmodifi
 				return entry
 		for entry_name, entry_version in changelog_entries:
 			if srcpkg_was_in_debian(entry_name, entry_version):
-				return entry
+				return (entry_name, entry_version)
 	if possibly_derived_from:
 		possibly_derived_from.sort(cmp=lambda a,b: apt_pkg.version_compare(b[1],a[1]))
 		for entry_name, entry_version in possibly_derived_from:
