@@ -308,85 +308,125 @@ def get_debian_info(files):
 
 # Functions for extracting information from the snapshots database
 
+def database_error(e):
+	reason = None
+	code = None
+	if hasattr(e, 'pgerror'): reason = e.pgerror
+	if hasattr(e, 'pgcode'): code = e.pgcode
+	logging.warning('unable to execute database query: %s %s', code, reason)
+	conn.reset()
+
 def srcpkg_was_in_debian(name, version=None):
-	if version:
-		cur.execute('SELECT version FROM srcpkg WHERE name=%s AND version=%s LIMIT 1;', (name, version))
-		return not not cur.fetchone()
-	else:
-		cur.execute('SELECT version FROM srcpkg WHERE name=%s LIMIT 1;', (name,))
-		return not not cur.fetchone()
+	try:
+		if version:
+			cur.execute('SELECT version FROM srcpkg WHERE name=%s AND version=%s LIMIT 1;', (name, version))
+			return not not cur.fetchone()
+		else:
+			cur.execute('SELECT version FROM srcpkg WHERE name=%s LIMIT 1;', (name,))
+			return not not cur.fetchone()
+	except psycopg2.Error, e:
+		database_error(e)
+		return None
 
 def sha1_to_srcpkgs(sha1):
-	cur.execute(
-		'''SELECT name, version
-		FROM srcpkg
-		JOIN file_srcpkg_mapping ON file_srcpkg_mapping.srcpkg_id=srcpkg.srcpkg_id
-		WHERE hash=%s;''', (sha1,))
-	return cur.fetchall()
+	try:
+		cur.execute(
+			'''SELECT name, version
+			FROM srcpkg
+			JOIN file_srcpkg_mapping ON file_srcpkg_mapping.srcpkg_id=srcpkg.srcpkg_id
+			WHERE hash=%s;''', (sha1,))
+		return cur.fetchall()
+	except psycopg2.Error, e:
+		database_error(e)
+		return None
 
 def srcpkg_to_sha1s(name, version):
-	cur.execute(
-		'''SELECT hash
-		FROM file_srcpkg_mapping
-		JOIN srcpkg ON srcpkg.srcpkg_id=file_srcpkg_mapping.srcpkg_id
-		WHERE name=%s AND version=%s;''', (name, version))
-	return cur.fetchall()
+	try:
+		cur.execute(
+			'''SELECT hash
+			FROM file_srcpkg_mapping
+			JOIN srcpkg ON srcpkg.srcpkg_id=file_srcpkg_mapping.srcpkg_id
+			WHERE name=%s AND version=%s;''', (name, version))
+		return cur.fetchall()
+	except psycopg2.Error, e:
+		database_error(e)
+		return None
 
 def srcpkg_to_srcpkgs(name):
-	cur.execute(
-		'''SELECT name, version
-		FROM srcpkg
-		WHERE name=%s ORDER BY version DESC;''', (name,))
-	return cur.fetchall()
+	try:
+		cur.execute(
+			'''SELECT name, version
+			FROM srcpkg
+			WHERE name=%s ORDER BY version DESC;''', (name,))
+		return cur.fetchall()
+	except psycopg2.Error, e:
+		database_error(e)
+		return None
 
 def sha1s_to_files(sha1):
-	cur.execute('SELECT DISTINCT ON (name, hash) name, hash FROM file WHERE hash=%s;', hash)
-	return cur.fetchall()
+	try:
+		cur.execute('SELECT DISTINCT ON (name, hash) name, hash FROM file WHERE hash=%s;', hash)
+		return cur.fetchall()
+	except psycopg2.Error, e:
+		database_error(e)
+		return None
 
 def srcpkg_to_files(name, version):
-	cur.execute(
-		'''SELECT DISTINCT ON (file.name, file.hash) file.name, file.hash
-		FROM file_srcpkg_mapping
-		JOIN srcpkg ON srcpkg.srcpkg_id=file_srcpkg_mapping.srcpkg_id
-		JOIN file ON file_srcpkg_mapping.hash=file.hash
-		WHERE srcpkg.name=%s AND srcpkg.version=%s;''', (name, version))
-	return cur.fetchall()
+	try:
+		cur.execute(
+			'''SELECT DISTINCT ON (file.name, file.hash) file.name, file.hash
+			FROM file_srcpkg_mapping
+			JOIN srcpkg ON srcpkg.srcpkg_id=file_srcpkg_mapping.srcpkg_id
+			JOIN file ON file_srcpkg_mapping.hash=file.hash
+			WHERE srcpkg.name=%s AND srcpkg.version=%s;''', (name, version))
+		return cur.fetchall()
+	except psycopg2.Error, e:
+		database_error(e)
+		return None
 
 def sha1_version_to_derived_from(sha1, version):
-	cur.execute(
-		'''SELECT name, version
-		FROM srcpkg
-		JOIN file_srcpkg_mapping ON file_srcpkg_mapping.srcpkg_id=srcpkg.srcpkg_id
-		WHERE hash=%s and version<=%s
-		ORDER BY name ASC, version DESC
-		LIMIT 1;''', (sha1, version))
-	res = cur.fetchall()
-	if res: return res
-	cur.execute(
-		'''SELECT name, version
-		FROM srcpkg
-		JOIN file_srcpkg_mapping ON file_srcpkg_mapping.srcpkg_id=srcpkg.srcpkg_id
-		WHERE hash=%s
-		ORDER BY name ASC, version ASC
-		LIMIT 1;''', (sha1, version))
-	return cur.fetchall()
+	try:
+		cur.execute(
+			'''SELECT name, version
+			FROM srcpkg
+			JOIN file_srcpkg_mapping ON file_srcpkg_mapping.srcpkg_id=srcpkg.srcpkg_id
+			WHERE hash=%s and version<=%s
+			ORDER BY name ASC, version DESC
+			LIMIT 1;''', (sha1, version))
+		res = cur.fetchall()
+		if res: return res
+		cur.execute(
+			'''SELECT name, version
+			FROM srcpkg
+			JOIN file_srcpkg_mapping ON file_srcpkg_mapping.srcpkg_id=srcpkg.srcpkg_id
+			WHERE hash=%s
+			ORDER BY name ASC, version ASC
+			LIMIT 1;''', (sha1, version))
+		return cur.fetchall()
+	except psycopg2.Error, e:
+		database_error(e)
+		return None
 
 def srcpkg_to_derived_from(name, version):
-	cur.execute(
-		'''SELECT name, version
-		FROM srcpkg
-		WHERE name=%s and version<=%s
-		ORDER BY version DESC
-		LIMIT 1;''', (name, version))
-	res = cur.fetchall()
-	if res: return res
-	cur.execute(
-		'''SELECT name, version
-		FROM srcpkg
-		WHERE name=%s
-		ORDER BY version ASC
-		LIMIT 1;''', (name,))
-	return cur.fetchall()
+	try:
+		cur.execute(
+			'''SELECT name, version
+			FROM srcpkg
+			WHERE name=%s and version<=%s
+			ORDER BY version DESC
+			LIMIT 1;''', (name, version))
+		res = cur.fetchall()
+		if res: return res
+		cur.execute(
+			'''SELECT name, version
+			FROM srcpkg
+			WHERE name=%s
+			ORDER BY version ASC
+			LIMIT 1;''', (name,))
+		return cur.fetchall()
+	except psycopg2.Error, e:
+		database_error(e)
+		return None
 
 # Functions related to creating patches
 
