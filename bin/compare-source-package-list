@@ -757,7 +757,6 @@ def check_source_package(source_entry, srcpkg):
 				logging.debug('source package %s %s derived from %s %s', name, version, debian_name, debian_version)
 				debian_files = srcpkg_to_files(debian_name, debian_version)
 				if debian_files:
-					# FIXME: fix TypeError: 'NoneType' object is not iterable
 					debian_info = get_debian_info(debian_files)
 					if debian_info:
 						debian_dsc_sha1, debian_dsc_name, debian_parts = debian_info
