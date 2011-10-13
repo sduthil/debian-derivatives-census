@@ -721,6 +721,9 @@ def check_source_package(source_entry, srcpkg):
 			if not dsc_sha1:
 				logging.warning('finished processing source package %s %s: sha1 missing for dsc file', name, version)
 				return None
+			if parts_unknown:
+				logging.warning('finished processing source package %s %s: sha1 missing for some parts', name, version)
+				return None
 			new = None
 			link = None
 			patch = None
