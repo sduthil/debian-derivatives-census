@@ -61,6 +61,7 @@ global_patch_dir = os.path.abspath('../patches')
 snapshot_cache_dir = '/srv/snapshot.debian.org/farm'
 checksum_headers = ('Checksums-Sha1', 'Checksums-Sha256', 'Files')
 user_agent = 'Debian Derivatives Census QA bot'
+timeout = 60
 
 # Init
 apt_pkg.init()
@@ -133,7 +134,7 @@ def download_and_check_hash(url, dir, hash, hash_type):
 		makedirs(parent)
 		headers = { 'User-Agent' : user_agent }
 		req = urllib2.Request(url, None, headers)
-		u = urllib2.urlopen(req)
+		u = urllib2.urlopen(req, None, timeout)
 		data = u.read()
 		if hash_type == 'sha256':
 			data_hash = hashlib.sha256(data).hexdigest()
@@ -186,7 +187,7 @@ def download_sha1(url, dir, sha1):
 		makedirs(parent)
 		headers = { 'User-Agent' : user_agent }
 		req = urllib2.Request(url, None, headers)
-		u = urllib2.urlopen(req)
+		u = urllib2.urlopen(req, None, timeout)
 		data = u.read()
 		data_sha1 = hashlib.sha1(data).hexdigest()
 		if data_sha1 == sha1:
