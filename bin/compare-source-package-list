@@ -272,7 +272,11 @@ def get_info(srcpkg):
 	for header in checksum_headers:
 		if not dsc and header in srcpkg:
 			dsc = [x for x in srcpkg[header] if x['name'].endswith('.dsc')]
-	if not dsc or len(dsc) > 1:
+	if not dsc:
+		logging.warning('did not find any dsc files')
+		return None
+	if len(dsc) > 1:
+		logging.warning('found multiple dsc files: %s' % ' '.join(['%s %s' % (dsc_name, dsc_sha1) for dsc_name, dsc_sha1 in dsc]))
 		return None
 	dsc = dsc[0]
 	dsc_name = dsc['name']
@@ -291,8 +295,13 @@ def get_info(srcpkg):
 
 def get_debian_info(files):
 	dsc = [file for file in files if file[0].endswith('.dsc')]
-	if not dsc or len(dsc) > 1:
+	if not dsc:
+		logging.warning('did not find any Debian dsc files: snapshots bug or ancient source package')
 		return None
+	if len(dsc) > 1:
+		logging.warning('found multiple Debian dsc files: %s' % ' '.join(['%s %s' % (dsc_name, dsc_sha1) for dsc_name, dsc_sha1 in dsc]))
+		return None
+
 	dsc = dsc[0]
 	dsc_name, dsc_sha1 = dsc
 
