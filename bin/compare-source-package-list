@@ -311,8 +311,7 @@ def get_debian_info(files):
 		logging.warning('did not find any Debian dsc files: snapshots bug or ancient source package')
 		return None
 	if len(dsc) > 1:
-		logging.warning('found multiple Debian dsc files: %s' % ' '.join(['%s %s' % (dsc_name, dsc_sha1) for dsc_name, dsc_sha1 in dsc]))
-		return None
+		logging.warning('found multiple Debian dsc files, choosing first one: %s' % ' '.join(['%s %s' % (dsc_name, dsc_sha1) for dsc_name, dsc_sha1 in dsc]))
 
 	dsc = dsc[0]
 	dsc_name, dsc_sha1 = dsc
