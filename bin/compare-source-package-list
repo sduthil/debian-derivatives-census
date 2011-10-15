@@ -771,7 +771,7 @@ def check_source_package(source_entry, srcpkg):
 						debian_tmp_dir = prepare_debian(debian_dsc_name, debian_dsc_sha1, debian_parts)
 						patch_created = create_patch(tmp_dir, dsc_name, dsc_sha1, debian_tmp_dir, debian_dsc_name, debian_dsc_sha1)
 						patch_names = present_patch(name, version, dsc_sha1, debian_name, debian_version, debian_dsc_sha1)
-						patch = (debian_name, debian_version, name, version) + patch_names
+						if patch_names: patch = (debian_name, debian_version, name, version) + patch_names
 						rmtree(debian_tmp_dir)
 					else:
 						logging.warning('source package %s %s: could not get Debian info for %s %s: %s', name, version, debian_name, debian_version, debian_info)
