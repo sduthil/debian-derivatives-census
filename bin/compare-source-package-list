@@ -552,34 +552,60 @@ def find_derived_from(tmp_dir, name, version, dsc_name, dsc_sha1, parts_unmodifi
 
 	# Get a list of changelog entries
 	changelog_entries = get_changelog_entries(tmp_dir, dsc_name, dsc_sha1)
+	if changelog_entries:
+		logging.debug('changelog entries are: %s', ' '.join(['%s %s' % (entry_name, entry_version) for entry_name, entry_version in changelog_entries]))
 
 	# Get a list of candidate versions from the database
 	possibly_derived_from = []
+	logging.debug('checking which parts were in Debian')
 	for part_sha1, part_name in parts_unmodified:
-		possibly_derived_from.extend(sha1_to_srcpkgs(part_sha1))
+		part_derived_from = sha1_to_srcpkgs(part_sha1)
+		if part_derived_from:
+			logging.debug('part %s %s available in %s', part_sha1, part_name, ' '.join(['%s %s' % (entry_name, entry_version) for entry_name, entry_version in part_derived_from]))
+			possibly_derived_from.extend(part_derived_from)
 
 	if not possibly_derived_from:
-		possibly_derived_from = srcpkg_to_srcpkgs(name)
+		logging.debug('no parts in common with Debian, obtaining old versions')
+		old_packages = srcpkg_to_srcpkgs(name)
+		if old_packages: possibly_derived_from = old_packages
 
 	# Uniqify
 	possibly_derived_from = list(set(possibly_derived_from))
+	if possibly_derived_from:
+		logging.debug('possibly derived from: %s', ' '.join(['%s %s' % (entry_name, entry_version) for entry_name, entry_version in possibly_derived_from]))
+	else:
+		logging.debug('nothing in possibly derived from list')
 
 	# Match changelog versions against candidates
 	if changelog_entries:
+		logging.debug('matching changelog entries against versions possibly derived from')
 		for entry in changelog_entries:
+			entry_name, entry_version = entry
 			if entry in possibly_derived_from:
+				logging.debug('%s %s in possibly derived from', entry_name, entry_version)
 				return entry
+		logging.debug('checking if changelog entries were ever in Debian')
 		for entry_name, entry_version in changelog_entries:
 			if srcpkg_was_in_debian(entry_name, entry_version):
+				logging.debug('%s %s was in Debian', entry_name, entry_version)
 				return (entry_name, entry_version)
 	if possibly_derived_from:
+		logging.debug('finding closest entry in possibly derived from')
 		possibly_derived_from.sort(cmp=lambda a,b: apt_pkg.version_compare(b[1],a[1]))
 		for entry_name, entry_version in possibly_derived_from:
 			if name == entry_name and apt_pkg.version_compare(version, entry_version) <= 0:
+				logging.debug('%s %s is a lower version', entry_name, entry_version)
 				return (entry_name, entry_version)
-		return possibly_derived_from[-1]
-	for entry in srcpkg_to_derived_from(name, version):
+		entry = possibly_derived_from[-1]
+		entry_name, entry_version = entry
+		logging.debug('no lower version numbers, returning next highest version %s %s', entry_name, entry_version)
 		return entry
+	logging.debug('finding closest version number in Debian')
+	for entry in srcpkg_to_derived_from(name, version):
+		entry_name, entry_version = entry
+		logging.debug('closest package was %s %s', entry_name, entry_version)
+		return entry
+	logging.debug('could not find Debian package %s %s is derived from', name, version)
 	return None
 
 # Generate a patch file
