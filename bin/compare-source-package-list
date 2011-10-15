@@ -23,6 +23,7 @@ import hashlib
 import shutil
 import logging
 import tempfile
+import socket
 import signal
 import subprocess
 import yaml
@@ -182,6 +183,9 @@ def download_and_check_hash(url, dir, hash, hash_type):
 	except httplib.HTTPException, e:
 		logging.warning('unable to download hash file, ignoring: %s %s', repr(e), url)
 		return ('unknown', None)
+	except socket.error, e:
+		logging.warning('unable to download hash file, ignoring: %s %s', e, url)
+		return ('unknown', None)
 
 def download_sha1(url, dir, sha1):
 	try:
@@ -212,6 +216,9 @@ def download_sha1(url, dir, sha1):
 		return ('unknown', None)
 	except httplib.HTTPException, e:
 		logging.warning('unable to download hash file, ignoring: %s %s', repr(e), url)
+		return ('unknown', None)
+	except socket.error, e:
+		logging.warning('unable to download hash file, ignoring: %s %s', e, url)
 		return ('unknown', None)
 
 # Functions for checking the hash caches
