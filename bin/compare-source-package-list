@@ -62,6 +62,7 @@ md5_cache_dir = os.path.abspath('../md5-farm')
 sha1_cache_dir = os.path.abspath('../sha1-farm')
 sha256_cache_dir = os.path.abspath('../sha256-farm')
 sha1_patch_dir = os.path.abspath('../sha1-patches')
+sha1_lsdiff_dir = os.path.abspath('../sha1-lsdiff')
 sha1_changelog_dir = os.path.abspath('../sha1-changelog')
 deriv_patch_dir = os.path.abspath('patches')
 global_patch_dir = os.path.abspath('../patches')
@@ -112,6 +113,12 @@ def sha1_patch_path(debian_dsc_sha1, dsc_sha1, type=None):
 	path = os.path.join(hash_path(sha1_patch_dir, debian_dsc_sha1), hash_path('', dsc_sha1))
 	if type: path += '.%s' % type
 	path += '.patch'
+	return os.path.abspath(path)
+
+def sha1_lsdiff_path(debian_dsc_sha1, dsc_sha1, type=None):
+	path = os.path.join(hash_path(sha1_lsdiff_dir, debian_dsc_sha1), hash_path('', dsc_sha1))
+	if type: path += '.%s' % type
+	path += '.lsdiff'
 	return os.path.abspath(path)
 
 def shortslug(name):
@@ -671,17 +678,31 @@ def create_patch(tmp_dir, dsc_name, dsc_sha1, debian_tmp_dir, debian_dsc_name, d
 
 	return True
 
-def check_patch(patch):
-	cmdline = ['lsdiff', patch]
-	process = subprocess.Popen(cmdline, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, preexec_fn=subprocess_setup)
-	output = process.communicate()[0].splitlines()
-	for line in output:
+def check_patch(debian_dsc_sha1, dsc_sha1):
+	patch_path = sha1_patch_path(debian_dsc_sha1, dsc_sha1)
+	lsdiff_path = sha1_lsdiff_path(debian_dsc_sha1, dsc_sha1)
+	if os.path.exists(lsdiff_path):
+		logging.debug('lsdiff cache exists for %s', patch_path)
+		f = file(lsdiff_path)
+		lsdiff = f.read()
+		f.close()
+	else:
+		logging.debug('lsdiff cache does not exist for %s', patch_path)
+		cmdline = ['lsdiff', patch_path]
+		process = subprocess.Popen(cmdline, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, preexec_fn=subprocess_setup)
+		lsdiff = process.communicate()[0]
+		makedirs(os.path.dirname(lsdiff_path))
+		f = file(lsdiff_path,'w')
+		f.write(lsdiff)
+		f.close()
+	lsdiff = lsdiff.splitlines()
+	for line in lsdiff:
 		if line != 'debian/changelog' and not line.endswith('/debian/changelog'):
 			return True
 	return False
 
 def present_patch(name, version, dsc_sha1, debian_name, debian_version,  debian_dsc_sha1):
-	useful_patch = check_patch(sha1_patch_path(debian_dsc_sha1, dsc_sha1))
+	useful_patch = check_patch(debian_dsc_sha1, dsc_sha1)
 	patches = []
 	# FIXME: enable the filtered ones when we have a list of ignorables
 	#types = ('', 'debian',  'filtered', 'debian.filtered')
