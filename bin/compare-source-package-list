@@ -827,13 +827,13 @@ def process_sources(source_entries, lists_dir):
 					action_patch, action_link, action_new = actions
 					if action_patch:
 						patches.append(action_patch)
-						logging.debug('action: return patches %s', action_patch)
+						logging.debug('action: return patches %s', ' '.join(action_patch))
 					if action_link:
 						links.append(action_link)
-						logging.debug('action: return links to modified source packages %s', action_link)
+						logging.debug('action: return links to modified source packages %s', ' '.join(action_link))
 					if action_new:
 						new.append(action_new)
-						logging.debug('action: return links to new source packages %s', action_new)
+						logging.debug('action: return links to new source packages %s', ' '.join(action_new))
 				logging.debug('done')
 				logging.debug('')
 			f.close()
