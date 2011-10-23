@@ -717,8 +717,8 @@ def present_patch(name, version, dsc_sha1, debian_name, debian_version,  debian_
 		makedirs(os.path.dirname(ln_from_global))
 		remove(ln_from_deriv)
 		remove(ln_from_global)
-		os.symlink(os.path.relpath(ln_to, os.path.dirname(ln_from_deriv)), ln_from_deriv)
-		os.symlink(os.path.relpath(ln_to, os.path.dirname(ln_from_global)), ln_from_global)
+		symlink(os.path.relpath(ln_to, os.path.dirname(ln_from_deriv)), ln_from_deriv)
+		symlink(os.path.relpath(ln_to, os.path.dirname(ln_from_global)), ln_from_global)
 		if useful_patch:
 			patches.append(os.path.relpath(ln_from_global, os.path.abspath(global_patch_dir)))
 	return tuple(patches)
