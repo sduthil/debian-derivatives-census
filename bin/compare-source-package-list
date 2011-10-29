@@ -23,6 +23,7 @@ import hashlib
 import shutil
 import logging
 import tempfile
+import string
 import socket
 import signal
 import subprocess
@@ -70,6 +71,7 @@ snapshot_cache_dir = '/srv/snapshot.debian.org/farm'
 checksum_headers = ('Checksums-Sha1', 'Checksums-Sha256', 'Files')
 user_agent = 'Debian Derivatives Census QA bot'
 timeout = 60
+ishex = lambda s: not(set(s)-set(string.hexdigits))
 
 # Init
 apt_pkg.init()
@@ -728,16 +730,6 @@ def present_patch(name, version, dsc_sha1, debian_name, debian_version,  debian_
 def check_source_package(source_entry, srcpkg):
 	global modifies_dsc_files
 
-	# FIXME: sanitise some variables that are used in filesystem access
-	# name
-	# version
-	# dir
-	# dsc_name
-	# dsc_hash
-	# dsc_hash_type
-	# dsc_url
-	# part['name']
-	# part[hash_type]
 	try:
 		name = None
 		version = None
@@ -745,6 +737,15 @@ def check_source_package(source_entry, srcpkg):
 		name = srcpkg['Package']
 		version = srcpkg['Version']
 		dir = srcpkg['Directory']
+		if '/' in name or name == '..':
+			logging.warning('could not process source package %s %s: possibly malicious name', name, version)
+			return None
+		if '/' in version or version == '..':
+			logging.warning('could not process source package %s %s: possibly malicious version', name, version)
+			return None
+		if '..' in dir.split('/'):
+			logging.warning('could not process source package %s %s: possibly malicious dir: %s', name, version, dir)
+			return None
 	except:
 		logging.warning('could not process source package %s %s', name, version)
 		return None
@@ -754,6 +755,12 @@ def check_source_package(source_entry, srcpkg):
 		logging.warning('finished processing source package %s %s: could not get any info', name, version)
 		return None
 	dsc_hash_type, dsc_hash, dsc_name, parts = info
+	if '/' in dsc_name or dsc_name == '..':
+		logging.warning('could not process source package %s %s: possibly malicious dsc name %s', name, version, dsc_name)
+		return None
+	if not ishex(dsc_hash):
+		logging.warning('could not process source package %s %s: possibly malicious dsc hash %s', name, version, dsc_hash)
+		return None
 	dsc_url = source_entry.archive_uri('%s/%s' % (dir, dsc_name))
 	logging.debug('found dsc file: %s %s %s', dsc_hash_type, dsc_hash, dsc_url)
 	dsc_status, dsc_sha1 = status(dsc_hash_type, dsc_hash, dsc_url)
@@ -768,8 +775,14 @@ def check_source_package(source_entry, srcpkg):
 		parts_modified = parts_unknown = 0
 		for part in parts:
 			part_name = part['name']
+			if '/' in part_name or part_name == '..':
+				logging.warning('could not process source package %s %s: possibly malicious part name %s', name, version, part_name)
+				return None
 			part_url = source_entry.archive_uri('%s/%s' % (dir, part_name))
 			part_hash_type, part_hash = [(k, v) for k, v in part.iteritems() if k not in ('name', 'size')][0]
+			if not ishex(part_hash):
+				logging.warning('could not process source package %s %s: possibly malicious part hash %s', name, version, part_hash)
+				return None
 			logging.debug('found part file: %s %s %s', part_hash_type, part_hash, part_url)
 			part_status, part_sha1 = status(part_hash_type, part_hash, part_url)
 			logging.debug('checked part status: %s %s %s', part_status, part_sha1, part_url)
