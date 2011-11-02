@@ -673,11 +673,6 @@ def create_patch(tmp_dir, dsc_name, dsc_sha1, debian_tmp_dir, debian_dsc_name, d
 		f.write(filterdiff_output)
 		f.close()
 
-	# FIXME: Filter the main patch by removing external and generated files
-	# This will remove standard autotools cruft and debian/ dir cruft
-	#filterdiff --exclude cruft < sha1patches/$debian_dsc_sha1-$deriv_dsc_sha1.patch > sha1patches/$debian_dsc_sha1-$deriv_dsc_sha1-filtered.patch
-	#filterdiff --exclude * --exclude cruft --include debian --exclude debian-cruft < sha1patches/$debian_dsc_sha1-$deriv_dsc_sha1.patch > sha1patches/$debian_dsc_sha1-$deriv_dsc_sha1-debian-filtered.patch
-
 	return True
 
 def check_patch(debian_dsc_sha1, dsc_sha1):
@@ -706,8 +701,6 @@ def check_patch(debian_dsc_sha1, dsc_sha1):
 def present_patch(name, version, dsc_sha1, debian_name, debian_version,  debian_dsc_sha1):
 	useful_patch = check_patch(debian_dsc_sha1, dsc_sha1)
 	patches = []
-	# FIXME: enable the filtered ones when we have a list of ignorables
-	#types = ('', 'debian',  'filtered', 'debian.filtered')
 	types = ('', 'debian')
 	for type in types:
 		ln_to = sha1_patch_path(debian_dsc_sha1, dsc_sha1, type)
