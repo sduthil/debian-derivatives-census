@@ -10,8 +10,6 @@ ALL = \
 	apt \
 	name \
 	homepage \
-	favicon \
-	favicon-img \
 	logo \
 	logo-img \
 	blogs \
