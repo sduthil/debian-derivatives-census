@@ -17,7 +17,8 @@ ALL = \
 	blogs \
 	blogs-rss \
 	blogs-dev \
-	blogs-dev-rss
+	blogs-dev-rss \
+	check
 
 all: $(ALL)
 
