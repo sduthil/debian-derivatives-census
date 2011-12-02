@@ -72,7 +72,10 @@ blogs-dev: wiki.txt
 blogs-dev-rss: blogs-dev
 	get-blogs-rss $^ $@
 
-check: check-package-list
+check: check-package-list check-sources-list
 
 check-package-list: sources.list apt
 	check-package-list $^ $@
+
+check-sources-list: sources.list
+	check-sources-list $^ $@

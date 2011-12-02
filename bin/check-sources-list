@@ -1,0 +1,80 @@
+#!/usr/bin/python
+
+# Copyright 2011 Paul Wise
+# Released under the MIT/Expat license, see doc/COPYING
+
+# FIXME: check that each deb line has a corresponding deb-src line
+
+import re
+import os
+import sys
+import logging
+from urlparse import urlparse
+
+class sources_entry:
+	def __repr__(self):
+		return 'sources_entry(%r)' % self.__dict__
+
+# Setup logging 
+try: os.remove(sys.argv[2])
+except: pass
+logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.DEBUG, filename=sys.argv[2])
+
+# Read sources.list
+try:
+	sources_list = sys.argv[1]
+	sources_list_f = open(sources_list)
+	sources_list = sources_list_f.readlines()
+	sources_list_f.close()
+except:
+	logging.warning('no sources list')
+	sys.exit()
+
+# Parse sources.list
+sources_entries = []
+for line in sources_list:
+	text = line
+	line = line[:line.find('#')]
+	line = line.strip()
+	if not line: continue
+	entry = sources_entry()
+	entry.text = text
+	print line
+	line = line.split(None, 1)
+	entry.type = line[0]
+	line = line[1]
+	if line[0] == '[':
+		end_options = line.find(']')
+		entry.options = line[1:end_options] if ']' in line else line[1:] 
+		entry.options = entry.options.split()
+		entry.options = dict([opt.split('=',1) for opt in entry.options])
+		entry.options = dict([(k, v.split(',') if k == 'arch' else v) for k, v in entry.options.items()])
+	else:
+		end_options = -1
+		entry.options = None
+	line = line[end_options+1:]
+	line = line.split(None, 2)
+	entry.uri, entry.distribution = line[:2]
+	entry.uri = urlparse(entry.uri)
+	if len(line) > 2: entry.components = line[2].split()
+	sources_entries.append(entry)
+
+# Empty or fully commented sources.list 
+if not sources_entries:
+	logging.warning('no sources entries')
+	sys.exit()
+
+# Check sources.list
+for entry in sources_entries:
+	if entry.type not in ('deb','deb-src'):
+		logging.warning('unknown repository type: %s', entry.text)
+	if entry.type == 'deb' and not (entry.options and 'arch' in entry.options and entry.options['arch']):
+		logging.warning('missing or empty arch= in options: %s', entry.text)
+	if entry.uri.scheme not in ('ftp', 'http', 'https'):
+		logging.warning('unknown or inappropriate uri scheme: %s', entry.text)
+	if '.debian.org' in entry.uri.hostname and '.alioth.debian.org' not in entry.uri.hostname:
+		logging.warning('using a debian.org mirror: %s', entry.text)
+	if not entry.distribution.endswith('/') and not entry.components:
+		logging.warning('no components with distribution that is not an exact path: %s', entry.text)
+	if entry.distribution.endswith('/') and entry.components:
+		logging.warning('components with distribution that is an exact path: %s', entry.text)
