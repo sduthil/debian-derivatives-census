@@ -39,7 +39,6 @@ for line in sources_list:
 	if not line: continue
 	entry = sources_entry()
 	entry.text = text
-	print line
 	line = line.split(None, 1)
 	entry.type = line[0]
 	line = line[1]
