@@ -40,7 +40,6 @@ source_entries = [[i for i in x.index_files if i.label=='Debian Source Index'] f
 # unmodified dsc but modified parts (broken source package or checksums)
 # less files than the Debian srcpkg
 # using Release+Release.gpg instead of InRelease files
-# unsigned Release files
 # missing hashes in Release files
 # Components from Release files not listed in hashes
 # Components from Release files not listed in sources.list
@@ -52,6 +51,10 @@ source_entries = [[i for i in x.index_files if i.label=='Debian Source Index'] f
 # Run lintian over the dsc and deb files
 # Sources lists not matching Packages lists
 # Empty Release/Packages/Sources files
+
+for x in sources_list.list:
+	if not x.is_trusted:
+		print >>output, 'Release file not GPG signed: %s' % x.uri
 
 for source in source_entries:
 	for s in source:
