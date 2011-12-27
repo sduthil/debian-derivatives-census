@@ -86,3 +86,5 @@ for entry in sources_entries:
 		logging.warning('no components with distribution that is not an exact path: %s', entry.text)
 	if entry.distribution.endswith('/') and entry.components:
 		logging.warning('components with distribution that is an exact path: %s', entry.text)
+	if [option for option in entry.options if option != 'arch']:
+		logging.warning('unknown option: %s from %s', option, entry.text)
