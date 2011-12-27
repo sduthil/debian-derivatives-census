@@ -4,6 +4,4 @@ Check for a Hopmepage
 
 Check for a maintainer
 
-Check for lack of arch= in the deb-src lines in the sources.list
-
 Check for one deb-src line per deb line in the sources.list

@@ -70,6 +70,8 @@ for entry in sources_entries:
 		logging.warning('unknown repository type: %s', entry.text)
 	if entry.type == 'deb' and not (entry.options and 'arch' in entry.options and entry.options['arch']):
 		logging.warning('missing or empty arch= in options: %s', entry.text)
+	if entry.type == 'deb-src' and 'arch' in entry.options:
+		logging.warning('arch option in deb-src entry: %s', entry.text)
 	if entry.uri.scheme not in ('ftp', 'http', 'https'):
 		logging.warning('unknown or inappropriate uri scheme: %s', entry.text)
 	if '.debian.org' in entry.uri.hostname and '.alioth.debian.org' not in entry.uri.hostname:
