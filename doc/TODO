@@ -3,5 +3,3 @@ Add a derivatives lint checker:
 Check for a Hopmepage
 
 Check for a maintainer
-
-Check for one deb-src line per deb line in the sources.list

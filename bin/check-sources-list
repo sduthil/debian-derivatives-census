@@ -3,8 +3,6 @@
 # Copyright 2011 Paul Wise
 # Released under the MIT/Expat license, see doc/COPYING
 
-# FIXME: check that each deb line has a corresponding deb-src line
-
 import re
 import os
 import sys
@@ -73,6 +71,7 @@ if not [entry for entry in sources_entries if entry.type == 'deb-src']:
 	logging.warning('no deb-src entries')
 
 # Check sources.list
+repos = {}
 for entry in sources_entries:
 	if entry.type not in ('deb','deb-src'):
 		logging.warning('unknown repository type: %s', entry.text)
@@ -94,3 +93,21 @@ for entry in sources_entries:
 		logging.warning('components with distribution that is an exact path: %s', entry.text)
 	if [option for option in entry.options if option != 'arch']:
 		logging.warning('unknown option: %s from %s', option, entry.text)
+	if entry.uri.geturl() not in repos:
+		repos[entry.uri.geturl()] = {}
+	if entry.distribution not in repos[entry.uri.geturl()]:
+		repos[entry.uri.geturl()][entry.distribution] = {}
+	if entry.type not in repos[entry.uri.geturl()][entry.distribution]:
+		repos[entry.uri.geturl()][entry.distribution][entry.type] = set()
+	repos[entry.uri.geturl()][entry.distribution][entry.type].update(entry.components)
+
+for uri, dists in repos.items():
+	for dist, types in dists.items():
+		if 'deb' not in types and 'deb-src' not in types:
+			logging.warning('weird dist without deb/deb-src entries: %s %s', uri, dist)
+		elif 'deb' not in types:
+			logging.warning('deb-src without matching deb-src entry: %s %s %s', uri, dist, ','.join(types['deb-src']))
+		elif 'deb-src' not in types:
+			logging.warning('deb without matching deb-src entry: %s %s %s', uri, dist, ','.join(types['deb']))
+		elif types['deb'] != types['deb-src']:
+			logging.warning('mismatched deb/deb-src entries: %s %s %s != %s', uri, dist, ','.join(types['deb']), ','.join(types['deb-src']))
