@@ -56,6 +56,7 @@ for line in sources_list:
 	entry.uri, entry.distribution = line[:2]
 	entry.uri = urlparse(entry.uri)
 	if len(line) > 2: entry.components = line[2].split()
+	else: entry.components = []
 	sources_entries.append(entry)
 
 # Empty or fully commented sources.list 
