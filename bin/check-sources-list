@@ -74,6 +74,8 @@ for entry in sources_entries:
 		logging.warning('unknown or inappropriate uri scheme: %s', entry.text)
 	if '.debian.org' in entry.uri.hostname and '.alioth.debian.org' not in entry.uri.hostname:
 		logging.warning('using a debian.org mirror: %s', entry.text)
+	if '.debian-multimedia.org' in entry.uri.hostname:
+		logging.warning('using debian-multimedia.org, not needed: %s', entry.text)
 	if not entry.distribution.endswith('/') and not entry.components:
 		logging.warning('no components with distribution that is not an exact path: %s', entry.text)
 	if entry.distribution.endswith('/') and entry.components:
