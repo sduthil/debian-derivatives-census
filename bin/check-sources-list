@@ -50,7 +50,7 @@ for line in sources_list:
 		entry.options = dict([(k, v.split(',') if k == 'arch' else v) for k, v in entry.options.items()])
 	else:
 		end_options = -1
-		entry.options = None
+		entry.options = {}
 	line = line[end_options+1:]
 	line = line.split(None, 2)
 	entry.uri, entry.distribution = line[:2]
