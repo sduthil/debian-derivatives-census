@@ -10,7 +10,7 @@ derivatives := $(shell cat derivatives)
 
 all: census.html derivatives template.txt $(derivatives) planet-config.ini
 
-$(derivatives):
+$(derivatives): derivatives
 	mkdir --parents $@
 	ln -sf ../../Makefile.deriv $@/Makefile
 	$(MAKE) -C $@
