@@ -88,7 +88,7 @@ apt_pkg.config.set('Dir::Bin::gpg', 'fakegpgv')
 # Preparation
 sources_list = apt_pkg.SourceList()
 sources_list.read_main_list()
-conn = psycopg2.connect("host=localhost port=5433 dbname=snapshot user=guest")
+conn = psycopg2.connect("service=snapshot-guest")
 cur = conn.cursor()
 remove(sys.argv[6])
 logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.DEBUG, filename=sys.argv[6])
