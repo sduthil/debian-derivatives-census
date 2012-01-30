@@ -8,7 +8,14 @@ derivatives := $(shell cat derivatives)
 
 .PHONY: all clean $(derivatives)
 
-all: census.html derivatives template.txt $(derivatives) planet-config.ini
+ALL = \
+	census.html \
+	derivatives \
+	$(derivatives) \
+	planet-config.ini \
+	template.txt
+
+all: $(ALL)
 
 $(derivatives): derivatives
 	mkdir --parents $@
