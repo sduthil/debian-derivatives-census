@@ -14,6 +14,7 @@ ALL = \
 	$(derivatives) \
 	planet-config.ini \
 	debtags \
+	distrowatch \
 	template.txt
 
 all: $(ALL)
@@ -52,3 +53,6 @@ debtags: derivatives $(derivatives)
 			echo ; \
 		fi ; \
 	done > $@
+
+distrowatch:
+	get-distrowatch-stats $@
