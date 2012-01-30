@@ -17,6 +17,7 @@ ALL = \
 	blogs-dev \
 	blogs-dev-rss \
 	debtags \
+	distrowatch \
 	check
 
 all: $(ALL)
@@ -75,6 +76,9 @@ blogs-dev-rss: blogs-dev
 
 debtags: name sources.list
 	derivative-to-debtags $(notdir $(CURDIR)) $^ $@
+
+distrowatch: wiki.txt
+	wiki-text-to-distrowatch $^ $@
 
 check: check-package-list check-sources-list
 
