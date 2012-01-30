@@ -1,0 +1,52 @@
+#!/usr/bin/python
+
+# Copyright 2012 Paul Wise
+# Released under the MIT/Expat license, see doc/COPYING
+
+import os
+import sys
+import debian.deb822
+import apt_pkg
+
+class Debtags(debian.deb822._multivalued):
+	_multivalued_fields = {
+		'packages': ['url'],
+		'sources': ['url'],
+	}
+
+# Init
+apt_pkg.init()
+
+# Setup configuration
+apt_pkg.config.set('Dir::Etc::sourcelist', os.path.abspath(sys.argv[3]))
+
+# Preparation
+acquire = apt_pkg.Acquire()
+sources_list = apt_pkg.SourceList()
+sources_list.read_main_list()
+sources_list.get_indexes(acquire, True)
+
+packages = []
+sources  = []
+
+for item in acquire.items:
+	if 'Sources' in item.desc_uri:
+		sources.append(item.desc_uri)
+	elif 'Packages' in item.desc_uri:
+		packages.append(item.desc_uri)
+
+if packages or sources:
+
+	f = file(sys.argv[2])
+	name = f.readline().strip()
+	f.close()
+
+	output = Debtags()
+	output['Distribution'] = sys.argv[1].strip().split()[0]
+	output['Description'] = name
+	output['Packages'] = [{'url': package} for package in packages]
+	output['Sources'] = [{'url': source} for source in sources]
+
+	f = file(sys.argv[4], 'wb')
+	output.dump(f)
+	f.close()

@@ -13,6 +13,7 @@ ALL = \
 	derivatives \
 	$(derivatives) \
 	planet-config.ini \
+	debtags \
 	template.txt
 
 all: $(ALL)
@@ -43,3 +44,11 @@ template.txt:
 
 planet-config.ini: derivatives
 	derivatives-to-planet $^ $@ heads/deriv
+
+debtags: derivatives $(derivatives)
+	for d in $$( cat $< ) ; do \
+		if [ -s "$$d/debtags" ] ; then \
+			cat "$$d/debtags" ; \
+			echo ; \
+		fi ; \
+	done > $@

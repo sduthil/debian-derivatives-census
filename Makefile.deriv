@@ -16,6 +16,7 @@ ALL = \
 	blogs-rss \
 	blogs-dev \
 	blogs-dev-rss \
+	debtags \
 	check
 
 all: $(ALL)
@@ -71,6 +72,9 @@ blogs-dev: wiki.txt
 
 blogs-dev-rss: blogs-dev
 	get-blogs-rss $^ $@
+
+debtags: name sources.list
+	derivative-to-debtags $(notdir $(CURDIR)) $^ $@
 
 check: check-package-list check-sources-list
 
