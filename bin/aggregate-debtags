@@ -1,0 +1,59 @@
+#!/usr/bin/python
+
+# Copyright 2012 Paul Wise
+# Released under the MIT/Expat license, see doc/COPYING
+
+import os
+import sys
+
+# Sorting function
+
+# Check the arguments
+argc = len(sys.argv)
+if argc not in (2,3,4): sys.exit('Incorrect number of arguments')
+
+# Try to load the distrowatch data
+try:
+	f = open(sys.argv[2])
+	distrowatch = [distro.strip().split('^') for distro in f.readlines()]
+	distrowatch = dict([(distro, int(popularity)) for (distro, popularity) in distrowatch])
+	f.close()
+	use_distrowatch = True
+except IOError:
+	use_distrowatch = False
+
+# Load the data from individual derivatives and set sort keys
+sort = 0
+derivatives = []
+derivatives_f = open(sys.argv[1])
+for derivative in derivatives_f:
+	derivative = derivative.strip()
+
+	try:
+		f = open(os.path.join(derivative,'debtags'))
+		debtags = f.read().strip()
+		f.close()
+	except:
+		continue
+
+	if use_distrowatch:
+		try:
+			f = open(os.path.join(derivative,'distrowatch'))
+			sort = distrowatch[f.readline().strip()]
+			f.close()
+		except:
+			sort = 0
+	else:
+		sort -= 1
+
+	derivatives.append((debtags + '\n\n', sort))
+
+# Sort the data
+derivatives.sort(key=lambda derivative: derivative[1], reverse=True)
+
+# Output the data
+if argc in (3, 4): output = open(sys.argv[-1],'wb')
+elif argc == 2:    output = sys.stdout
+for derivative in derivatives:
+	output.write(derivative[0])
+output.close()
