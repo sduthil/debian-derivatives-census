@@ -523,8 +523,15 @@ def get_changelog_entries(tmp_dir, dsc_name, dsc_sha1):
 		rmtree(extract_path)
 		return None
 
-	# FIXME: sanitise the debian dir and changelog file in case it is a symlink to outside
-	changelog_filename = os.path.join(extract_path, 'debian','changelog')
+	# Sanitise the debian dir and changelog file in case it is a symlink to outside
+	debian_dir = os.path.join(extract_path, 'debian','changelog')
+	changelog_filename = os.path.join(debian_dir,'changelog')
+	if os.path.islink(debian_dir) or os.path.islink(changelog_filename):
+		logging.warning('debian dir or changelog is a symbolic link', dsc_name, extract_path)
+		rmtree(extract_path)
+		return None
+
+	# Check if the changelog exists
 	if not os.path.exists(changelog_filename):
 		logging.warning('could not find changelog in %s %s', dsc_name, extract_path)
 		rmtree(extract_path)
