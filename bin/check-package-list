@@ -91,7 +91,7 @@ for binary in binary_entries:
 		except:
 			print >>output, 'missing Packages file %s' % fn
 			continue
-		for binpkg in debian.deb822.Sources.iter_paragraphs(f):
+		for binpkg in debian.deb822.Packages.iter_paragraphs(f):
 			name = binpkg['Package']
 			version = binpkg['Version']
 			for type, (header, size) in binary_hash_types.items():
