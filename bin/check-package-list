@@ -7,6 +7,7 @@ import os
 import sys
 import debian.deb822
 import apt_pkg
+import logging
 
 # Setup variables
 source_hash_types = {'MD5': ('Files', 32, 'md5sum'), 'SHA-1': ('Checksums-Sha1', 40, 'sha1'), 'SHA-256': ('Checksums-Sha256', 64, 'sha256')}
@@ -14,7 +15,9 @@ binary_hash_types = {'MD5': ('MD5sum', 32), 'SHA-1': ('SHA1', 40), 'SHA-256': ('
 
 # Init
 apt_pkg.init()
-output = file(os.path.abspath(sys.argv[3]), 'wb')
+try: os.remove(sys.argv[3])
+except: pass
+logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.DEBUG, filename=sys.argv[3])
 
 # Setup configuration
 apt_pkg.config.set('Dir', os.path.abspath(sys.argv[2]))
@@ -54,33 +57,33 @@ source_entries = [[i for i in x.index_files if i.label=='Debian Source Index'] f
 
 for x in sources_list.list:
 	if not x.is_trusted:
-		print >>output, 'Release file not GPG signed: %s' % x.uri
+		logging.warning('Release file not GPG signed: %s', x.uri)
 
 for source in source_entries:
 	for s in source:
 		fn = os.path.join(lists_dir, s.describe.rstrip(')').rpartition('(')[2])
 		try: f = file(fn)
 		except:
-			print >>output, 'missing Sources file %s' % fn
+			logging.warning('missing Sources file %s', fn)
 			continue
 		for srcpkg in debian.deb822.Sources.iter_paragraphs(f):
 			name = srcpkg['Package']
 			version = srcpkg['Version']
 			for type, (header, size, short_type) in source_hash_types.items():
 				if header not in srcpkg:
-					print >>output, 'source %s %s: no %s hash' % (name, version, type)
+					logging.warning('source %s %s: no %s hash', name, version, type)
 					continue
 				for x in srcpkg[header]:
 					if len(x[short_type]) != size:
-						print >>output, 'source %s %s: %s: %s hash has unexpected size %s instead of %s' % (name, version, x['name'], type, len(x[short_type]), size)
+						logging.warning('source %s %s: %s: %s hash has unexpected size %s instead of %s', name, version, x['name'], type, len(x[short_type]), size)
 					try: int(x[short_type], 16)
-					except: print >>output, 'binary %s %s: %s hash is not a proper hexadecimal hash string (%s)' % (name, version, x['name'], type, x[short_type])
+					except: logging.warning('binary %s %s: %s hash is not a proper hexadecimal hash string (%s)', name, version, x['name'], type, x[short_type])
 				dsc = [x for x in srcpkg[header] if x['name'].endswith('.dsc')]
 				if not len(dsc):
-					print >>output, 'source %s %s: %s hashes but no hash for the dsc file' % (name, version, type)
+					logging.warning('source %s %s: %s hashes but no hash for the dsc file', name, version, type)
 					continue
 				elif len(dsc) > 1:
-					print >>output, 'source %s %s: multiple dsc files and %s hashes for them' % (name, version, type)
+					logging.warning('source %s %s: multiple dsc files and %s hashes for them', name, version, type)
 					continue
 		f.close()
 
@@ -89,19 +92,17 @@ for binary in binary_entries:
 		fn = os.path.join(lists_dir, b.describe.rstrip(')').rpartition('(')[2])
 		try: f = file(fn)
 		except:
-			print >>output, 'missing Packages file %s' % fn
+			logging.warning('missing Packages file %s', fn)
 			continue
 		for binpkg in debian.deb822.Packages.iter_paragraphs(f):
 			name = binpkg['Package']
 			version = binpkg['Version']
 			for type, (header, size) in binary_hash_types.items():
 				if header not in binpkg:
-					print >>output, 'binary %s %s: no %s hash' % (name, version, type)
+					logging.warning('binary %s %s: no %s hash', name, version, type)
 					continue
 				if len(binpkg[header]) != size:
-					print >>output, 'binary %s %s: %s hash has unexpected size %s instead of %s' % (name, version, type, len(binpkg[header]), size)
+					logging.warning('binary %s %s: %s hash has unexpected size %s instead of %s', name, version, type, len(binpkg[header]), size)
 				try: int(binpkg[header], 16)
-				except: print >>output, 'binary %s %s: %s hash is not a proper hexadecimal hash string (%s)' % (name, version, type, binpkg[header])
+				except: logging.warning('binary %s %s: %s hash is not a proper hexadecimal hash string (%s)', name, version, type, binpkg[header])
 		f.close()
-
-output.close()
