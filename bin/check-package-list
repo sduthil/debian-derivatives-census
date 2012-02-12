@@ -53,7 +53,6 @@ source_entries = [[i for i in x.index_files if i.label=='Debian Source Index'] f
 # Unknown fields in Release/Packages/Sources files
 # Run lintian over the dsc and deb files
 # Sources lists not matching Packages lists
-# Empty Release/Packages/Sources files
 
 for x in sources_list.list:
 	if not x.is_trusted:
@@ -66,7 +65,9 @@ for source in source_entries:
 		except:
 			logging.warning('missing Sources file %s', fn)
 			continue
+		count = 0
 		for srcpkg in debian.deb822.Sources.iter_paragraphs(f):
+			count += 1
 			name = srcpkg['Package']
 			version = srcpkg['Version']
 			for type, (header, size, short_type) in source_hash_types.items():
@@ -85,6 +86,8 @@ for source in source_entries:
 				elif len(dsc) > 1:
 					logging.warning('source %s %s: multiple dsc files and %s hashes for them', name, version, type)
 					continue
+		if count == 0:
+			logging.info('empty Sources file: %s', s.describe )
 		f.close()
 
 for binary in binary_entries:
@@ -94,7 +97,9 @@ for binary in binary_entries:
 		except:
 			logging.warning('missing Packages file %s', fn)
 			continue
+		count = 0
 		for binpkg in debian.deb822.Packages.iter_paragraphs(f):
+			count += 1
 			name = binpkg['Package']
 			version = binpkg['Version']
 			for type, (header, size) in binary_hash_types.items():
@@ -105,4 +110,6 @@ for binary in binary_entries:
 					logging.warning('binary %s %s: %s hash has unexpected size %s instead of %s', name, version, type, len(binpkg[header]), size)
 				try: int(binpkg[header], 16)
 				except: logging.warning('binary %s %s: %s hash is not a proper hexadecimal hash string (%s)', name, version, type, binpkg[header])
+		if count == 0:
+			logging.info('empty Packages file: %s', b.describe )
 		f.close()
