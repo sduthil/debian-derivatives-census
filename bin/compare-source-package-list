@@ -625,7 +625,6 @@ def find_derived_from(tmp_dir, name, version, dsc_name, dsc_sha1, parts_unmodifi
 
 # Generate a patch file
 def create_patch(tmp_dir, dsc_name, dsc_sha1, debian_tmp_dir, debian_dsc_name, debian_dsc_sha1):
-	# FIXME: sanitize the dsc contents, since it could be evil?
 	global repackaged_but_identical
 
 	dsc_path = os.path.join(tmp_dir, dsc_name)
