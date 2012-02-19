@@ -3,6 +3,8 @@
 # Copyright 2011 Paul Wise
 # Released under the MIT/Expat license, see doc/COPYING
 
+# FIXME: check for duplicate sources.list entries
+
 import re
 import os
 import sys

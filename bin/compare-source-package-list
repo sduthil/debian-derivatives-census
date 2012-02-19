@@ -4,6 +4,9 @@
 # Released under the MIT/Expat license, see doc/COPYING
 
 # FIXME: write out some statistics and rrdtool graphs
+#		source package types per derivative
+#		number of source packages
+#		cache misses: md5, sha256, sha1, patch, changelog
 # FIXME: comment the code to list assumptions and function purpose
 # FIXME: add options to allow re-processing only specific packages
 # FIXME: write something to clean up old files and patches
@@ -11,9 +14,15 @@
 # FIXME: don't make a patch when we were not able to unpack the source package
 # FIXME: deal with permissions errors on unpack??
 # FIXME: skip lzip encoded files??
-# FIXME: check for missing sha1 hashes (symlink targets) when checking the md5/sha256 caches
 # FIXME: cleanup files at start of run
-# FIXME: grab the code from merge-o-matic to extract debian/patches/ patches
+# FIXME: extract new debian/patches/ patches
+# FIXME: print out packages that are no longer in Debian
+# FIXME: deal with really large patches:
+# FIXME:   kde-l10n-*: too few parts to be useful
+# FIXME:   divergence: too many changelog entries between versions to be useful
+# FIXME:   derivative is older than Debian
+# FIXME:   derivative renamed the source package
+# FIXME:   just a really big diff
 
 import os
 import sys
