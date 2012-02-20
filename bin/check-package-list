@@ -3,11 +3,29 @@
 # Copyright 2011 Paul Wise
 # Released under the MIT/Expat license, see doc/COPYING
 
+import re
 import os
 import sys
 import debian.deb822
 import apt_pkg
 import logging
+import subprocess
+import signal
+
+def remove(file):
+	try: os.remove(file)
+	except OSError: pass
+
+def dump_list(file_name, list_contents):
+	f = open(file_name,'wb')
+	f.write(''.join('%s %s\n' % x for x in list_contents))
+	f.close()
+
+# http://www.chiark.greenend.org.uk/ucgi/~cjwatson/blosxom/2009-07-02-python-sigpipe.html
+def subprocess_setup():
+    # Python installs a SIGPIPE handler by default. This is usually not what
+    # non-Python subprocesses expect.
+    signal.signal(signal.SIGPIPE, signal.SIG_DFL)
 
 # Setup variables
 source_hash_types = {'MD5': ('Files', 32, 'md5sum'), 'SHA-1': ('Checksums-Sha1', 40, 'sha1'), 'SHA-256': ('Checksums-Sha256', 64, 'sha256')}
@@ -15,8 +33,7 @@ binary_hash_types = {'MD5': ('MD5sum', 32), 'SHA-1': ('SHA1', 40), 'SHA-256': ('
 
 # Init
 apt_pkg.init()
-try: os.remove(sys.argv[3])
-except: pass
+remove(sys.argv[3])
 logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.DEBUG, filename=sys.argv[3])
 
 # Setup configuration
@@ -70,6 +87,11 @@ for source in source_entries:
 			count += 1
 			name = srcpkg['Package']
 			version = srcpkg['Version']
+			sources_source_packages.append((name, version))
+			if 'Binary' in srcpkg:
+				sources_binary_packages += [(name, version) for name in srcpkg['Binary'].split(', ')]
+			else:
+				logging.info('no binary packages for source package %s %s', name, version)
 			for type, (header, size, short_type) in source_hash_types.items():
 				if header not in srcpkg:
 					logging.warning('source %s %s: no %s hash', name, version, type)
@@ -102,6 +124,15 @@ for binary in binary_entries:
 			count += 1
 			name = binpkg['Package']
 			version = binpkg['Version']
+			source_name = binpkg.get('Source', name)
+			if ' ' in source_name:
+				source_name = source_name.split(' ',1)
+				source_version = source_name[1][1:-1]
+				source_name = source_name[0]
+			else:
+				source_version = re.sub(r'\+b\d+$', '', version)
+			packages_binary_packages.append((name, source_version))
+			packages_source_packages.append((source_name, source_version))
 			for type, (header, size) in binary_hash_types.items():
 				if header not in binpkg:
 					logging.warning('binary %s %s: no %s hash', name, version, type)
@@ -113,3 +144,41 @@ for binary in binary_entries:
 		if count == 0:
 			logging.info('empty Packages file: %s', b.describe )
 		f.close()
+
+# Sort and uniqify the package name lists
+sources_source_packages = list(set(sources_source_packages))
+sources_binary_packages = list(set(sources_binary_packages))
+packages_source_packages = list(set(packages_source_packages))
+packages_binary_packages = list(set(packages_binary_packages))
+sources_source_packages.sort(key=lambda pkg: (pkg[0], pkg[1]))
+sources_binary_packages.sort(key=lambda pkg: (pkg[0], pkg[1]))
+packages_source_packages.sort(key=lambda pkg: (pkg[0], pkg[1]))
+packages_binary_packages.sort(key=lambda pkg: (pkg[0], pkg[1]))
+
+# Check if the package name lists match
+if sources_source_packages != packages_source_packages:
+	logging.warning('mismatched source packages in Sources/Packages')
+	dump_list('sources_source_packages', sources_source_packages)
+	dump_list('packages_source_packages', packages_source_packages)
+	cmdline = ['diff', '--unified', 'packages_source_packages', 'sources_source_packages']
+	stdout = open('diff_source_packages', 'w')
+	process = subprocess.Popen(cmdline, stdout=stdout, stderr=subprocess.PIPE, preexec_fn=subprocess_setup)
+	output = process.communicate()[1]
+	stdout.close()
+else:
+	remove('sources_source_packages')
+	remove('packages_source_packages')
+	remove('diff_source_packages')
+if sources_binary_packages != packages_binary_packages:
+	logging.warning('mismatched binary packages in Sources/Packages')
+	dump_list('sources_binary_packages', sources_binary_packages)
+	dump_list('packages_binary_packages', packages_binary_packages)
+	cmdline = ['diff', '--unified', 'packages_source_packages', 'sources_source_packages']
+	stdout = open('diff_source_packages', 'w')
+	process = subprocess.Popen(cmdline, stdout=stdout, stderr=subprocess.PIPE, preexec_fn=subprocess_setup)
+	output = process.communicate()[1]
+	stdout.close()
+else:
+	remove('sources_binary_packages')
+	remove('packages_binary_packages')
+	remove('diff_binary_packages')
