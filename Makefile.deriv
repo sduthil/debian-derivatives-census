@@ -74,7 +74,7 @@ blogs-dev: wiki.txt
 blogs-dev-rss: blogs-dev
 	get-blogs-rss $^ $@
 
-debtags: name sources.list
+debtags: name sources.list apt
 	derivative-to-debtags $(notdir $(CURDIR)) $^ $@
 
 distrowatch: wiki.txt

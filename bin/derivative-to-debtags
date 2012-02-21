@@ -18,7 +18,13 @@ class Debtags(debian.deb822._multivalued):
 apt_pkg.init()
 
 # Setup configuration
+apt_pkg.config.set('Dir', os.path.abspath(sys.argv[4]))
+apt_pkg.config.set('Dir::Etc', os.path.abspath(sys.argv[4]))
+apt_pkg.config.set('Dir::State', os.path.abspath(sys.argv[4]))
+apt_pkg.config.set('Dir::Cache', os.path.abspath(sys.argv[4]))
+apt_pkg.config.set('Dir::State::status', os.path.abspath(os.path.join(sys.argv[4],'status')))
 apt_pkg.config.set('Dir::Etc::sourcelist', os.path.abspath(sys.argv[3]))
+apt_pkg.config.set('Dir::Bin::gpg', 'fakegpgv')
 
 # Preparation
 acquire = apt_pkg.Acquire()
@@ -47,6 +53,6 @@ if packages or sources:
 	output['Packages'] = [{'url': package} for package in packages]
 	output['Sources'] = [{'url': source} for source in sources]
 
-	f = file(sys.argv[4], 'wb')
+	f = file(sys.argv[5], 'wb')
 	output.dump(f)
 	f.close()
