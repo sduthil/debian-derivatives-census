@@ -53,6 +53,10 @@ sources_list.read_main_list()
 lists_dir = apt_pkg.config.find_dir('Dir::State::lists')
 binary_entries = [[i for i in x.index_files if i.label=='Debian Package Index'] for x in sources_list.list]
 source_entries = [[i for i in x.index_files if i.label=='Debian Source Index'] for x in sources_list.list]
+sources_source_packages = []
+sources_binary_packages = []
+packages_source_packages = []
+packages_binary_packages = []
 
 # FIXME: switch to lintian-style output with tags and descriptions
 # FIXME: add some checks for the following information:
