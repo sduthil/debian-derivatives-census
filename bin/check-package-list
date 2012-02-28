@@ -46,8 +46,10 @@ apt_pkg.config.set('Dir::Etc::sourcelist', os.path.abspath(sys.argv[1]))
 apt_pkg.config.set('Dir::Bin::gpg', 'fakegpgv')
 
 # Preparation
+acquire = apt_pkg.Acquire()
 sources_list = apt_pkg.SourceList()
 sources_list.read_main_list()
+sources_list.get_indexes(acquire, True)
 
 # Voodoo
 lists_dir = apt_pkg.config.find_dir('Dir::State::lists')
@@ -78,6 +80,18 @@ packages_binary_packages = []
 for x in sources_list.list:
 	if not x.is_trusted:
 		logging.warning('Release file not GPG signed: %s', x.uri)
+
+for item in acquire.items:
+	if 'Release' in item.desc_uri and 'Release.gpg' not in item.desc_uri:
+		fn = item.destfile.replace('/partial/','/')
+		if not os.path.exists(fn):
+			fn = fn.replace('InRelease','Release')
+		try: f = file(fn)
+		except:
+			logging.warning('missing Release file %s', fn)
+			continue
+		release = debian.deb822.Release(f)
+		f.close()
 
 for source in source_entries:
 	for s in source:
