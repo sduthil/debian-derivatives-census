@@ -30,6 +30,7 @@ def subprocess_setup():
 # Setup variables
 source_hash_types = {'MD5': ('Files', 32, 'md5sum'), 'SHA-1': ('Checksums-Sha1', 40, 'sha1'), 'SHA-256': ('Checksums-Sha256', 64, 'sha256')}
 binary_hash_types = {'MD5': ('MD5sum', 32), 'SHA-1': ('SHA1', 40), 'SHA-256': ('SHA256', 64)}
+release_hash_types = {'MD5': ('MD5Sum', 32, 'md5sum'), 'SHA-1': ('SHA1', 40, 'sha1'), 'SHA-256': ('SHA256', 64, 'sha256')}
 
 # Init
 apt_pkg.init()
@@ -65,7 +66,6 @@ packages_binary_packages = []
 # modified dsc but unmodified parts
 # unmodified dsc but modified parts (broken source package or checksums)
 # less files than the Debian srcpkg
-# missing hashes in Release files
 # Components from Release files not listed in hashes
 # Components from Release files not listed in sources.list
 # missing Valid-Until/Date in Release files
@@ -92,6 +92,15 @@ for item in acquire.items:
 		if 'InRelease' not in fn:
 			logging.warning('not using the newer InRelease files: %s', item.desc_uri)
 		release = debian.deb822.Release(f)
+		for type, (header, size, short_type) in release_hash_types.items():
+			if header not in release:
+				logging.warning('release %s: no %s hash', item.desc_uri, type)
+				continue
+			for x in release[header]:
+				if len(x[short_type]) != size:
+					logging.warning('release %s: %s: %s hash has unexpected size %s instead of %s', item.desc_uri, x['name'], type, len(x[short_type]), size)
+				try: int(x[short_type], 16)
+				except: logging.warning('release %s: %s: %s hash is not a proper hexadecimal hash string (%s)', item.desc_uri, x['name'], type, x[short_type])
 		f.close()
 
 for source in source_entries:
