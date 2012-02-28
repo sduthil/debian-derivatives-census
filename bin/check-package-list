@@ -65,7 +65,6 @@ packages_binary_packages = []
 # modified dsc but unmodified parts
 # unmodified dsc but modified parts (broken source package or checksums)
 # less files than the Debian srcpkg
-# using Release+Release.gpg instead of InRelease files
 # missing hashes in Release files
 # Components from Release files not listed in hashes
 # Components from Release files not listed in sources.list
@@ -90,6 +89,8 @@ for item in acquire.items:
 		except:
 			logging.warning('missing Release file %s', fn)
 			continue
+		if 'InRelease' not in fn:
+			logging.warning('not using the newer InRelease files: %s', item.desc_uri)
 		release = debian.deb822.Release(f)
 		f.close()
 
