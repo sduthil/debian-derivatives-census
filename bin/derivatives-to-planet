@@ -16,6 +16,13 @@
 # Usage:
 # derivatives-to-planet <list of derivatives> <planet config> <heads dir>
 
+# FIXME: split this script into several scripts:
+# logo-to-planet-head: convert the logo image to a head suitable for planet
+# rss-to-planet-config: convert the rss feeds to a planet config snippet
+# aggregate-planet: logos and configs into a directory
+# get-planet-svn: checkout or update the copy of the planet SVN
+# compare-planet-to-svn: diff the planet SVN against the generated config
+
 import os
 import sys
 try: import Image
