@@ -3,6 +3,11 @@
 # Copyright 2011 Paul Wise
 # Released under the MIT/Expat license, see doc/COPYING
 
+# Downloads the yearly download stats from Distrowatch
+#
+# Usage:
+# get-distrowatch-stats <distrowatch stats file>
+
 set -e
 wget -q http://distrowatch.com/text/fullphr-52.txt -O - > "$1"
 find "$1" -empty -delete

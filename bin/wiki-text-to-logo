@@ -3,6 +3,11 @@
 # Copyright 2011 Paul Wise
 # Released under the MIT/Expat license, see doc/COPYING
 
+# Extract the logo URLs from the wiki text
+#
+# Usage
+# wiki-text-to-logo <wiki text file> <logo URLs file>
+
 set -e
 if test -f "$1" ; then
 	sed -r -n -e 's/^[^{]*\{\{([^{}|]+)[^{}]*\}\}[^}]*.*$/\1/p' "$1" | head -n1 > "$2"

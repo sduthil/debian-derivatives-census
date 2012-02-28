@@ -3,6 +3,13 @@
 # Copyright 2011 Paul Wise
 # Released under the MIT/Expat license, see doc/COPYING
 
+# Extract a list of short names of known derivatives from the Debian derivatives
+# census wiki page HTML. The census page aggregates all of the sub-pages
+# containing details of each individual derivative.
+#
+# Usage:
+# wiki-html-to-derivatives <wiki html file> <derivatives list file>
+
 cat "$1" \
 | grep -o '<a class="include-page-link" href="\([^"]*\)">' \
 | sed -n -e 's|<a class="include-page-link" href="/Derivatives/Census/\([-_A-Za-z0-9]*\)">|\1|gp' \

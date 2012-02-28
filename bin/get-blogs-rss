@@ -3,6 +3,14 @@
 # Copyright 2011 Paul Wise
 # Released under the MIT/Expat license, see doc/COPYING
 
+# Downloads the blog web pages and detects available RSS/Atom feeds using
+# standard automatic feed discovery, which is documented here:
+#
+# http://www.rssboard.org/rss-autodiscovery
+#
+# Usage:
+# get-blogs-rss <blog URL> <feed output file>
+
 use XML::Feed;
 
 my @feeds;

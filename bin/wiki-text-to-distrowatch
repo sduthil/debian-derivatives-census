@@ -3,6 +3,11 @@
 # Copyright 2011 Paul Wise
 # Released under the MIT/Expat license, see doc/COPYING
 
+# Extract the distrowatch identifier from the wiki text
+#
+# Usage
+# wiki-text-to-distrowatch <wiki text file> <distrowatch identifier file>
+
 set -e
 sed -r -n -e 's_^ *\* *Distrowatch *[^:]*: http://distrowatch\.com/(table\.php\?distribution=)?(.*)_\2_p' "$1" | tr ' ' '\n' > "$2"
 find "$2" -empty -delete

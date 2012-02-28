@@ -3,6 +3,15 @@
 # Copyright 2012 Paul Wise
 # Released under the MIT/Expat license, see doc/COPYING
 
+# Aggregates all the derivatives' debtags files into one file sorted by the
+# distrowatch popularity. This is for use by debtags.debian.net so that it can
+# allow people to tag packages that are not available in Debian. The sorting
+# is to allow the debtags server to resolve conflicts in package descriptions
+# by choosing the most popular one.
+#
+# Usage:
+# aggregate-debtags <derivatives list file> <distrowatch popularity file> <output file>
+
 import os
 import sys
 

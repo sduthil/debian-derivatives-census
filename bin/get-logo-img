@@ -3,6 +3,11 @@
 # Copyright 2011 Paul Wise
 # Released under the MIT/Expat license, see doc/COPYING
 
+# Downloads the logo images
+#
+# Usage:
+# get-logo-img <logo URLs file> <logo file>
+
 set -e
 if test -e "$1" ; then
 	wget -q "$(cat "$1")" -O - > "$2"

@@ -3,6 +3,11 @@
 # Copyright 2011 Paul Wise
 # Released under the MIT/Expat license, see doc/COPYING
 
+# Downloads the plain text versions of Debian wiki pages
+#
+# Usage:
+# get-wiki-text <wiki page name> <wiki page file>
+
 set -e
 wget -q "http://wiki.debian.org/Derivatives/$1?action=raw" -O - | tr -d '\r' > "$2"
 find "$2" -empty -delete

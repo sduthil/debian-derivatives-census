@@ -3,6 +3,35 @@
 # Copyright 2011 Paul Wise
 # Released under the MIT/Expat license, see doc/COPYING
 
+# Uses the snapshot.debian.org metadata database and SHA-1 based filesystem to
+# compute debdiffs between Debian and individual derivatives. The metadata
+# allows knowing if a particular file was ever in Debian and the filesystem
+# allows the creation of debdiffs.
+#
+# The script works approximately like this:
+#
+# Load the Sources files previously downloaded by get-package-lists as indicated
+# by the sources.list of the derivative.
+#
+# For each source package in the derivative:
+#
+# Check if the dsc has ever been in Debian, if not, check if the other
+# parts have and therefore decide if the package is unmodified or not.
+# Unmodified source packages are skipped and include those with the exact
+# same dsc file or those where all the non-dsc parts are identical.
+#
+# Try some heuristics (name, version, changelog entries) to find out if
+# the package could be based on some package that is or was in Debian.
+#
+# If it was not then skip to the next one and make a note, since Debian
+# might want to know about source packages that are missing from Debian.
+#
+# If it was then use debdiff to create a diff and filterdiff to create a
+# diff of the debian/ dir.
+#
+# Usage:
+# compare-source-package-list <sources.list> <apt dir> <patches list> <links list> <new package list> <log file>
+
 # FIXME: write out some statistics and rrdtool graphs
 #		source package types per derivative
 #		number of source packages

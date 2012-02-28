@@ -3,6 +3,11 @@
 # Copyright 2011 Paul Wise
 # Released under the MIT/Expat license, see doc/COPYING
 
+# Extract the derivative long name from the wiki text
+#
+# Usage
+# wiki-text-to-name <wiki text file> <long name file>
+
 set -e
 sed -r -n -e 's/^ *== *([^=]*) *== *$/\1/p' "$1" > "$2"
 find "$2" -empty -delete

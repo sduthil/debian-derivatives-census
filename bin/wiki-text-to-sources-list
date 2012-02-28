@@ -3,6 +3,11 @@
 # Copyright 2011 Paul Wise
 # Released under the MIT/Expat license, see doc/COPYING
 
+# Extract the sources.list from the wiki text
+#
+# Usage
+# wiki-text-to-sources-list <wiki text file> <sources.list file>
+
 set -e
 sed -n -e '/^ *{{{.*/,/^ *}}}/{/^ *{{{.*/d;/^ *}}}/d;p}' "$1" > "$2"
 find "$2" -empty -delete

@@ -3,6 +3,11 @@
 # Copyright 2011 Paul Wise
 # Released under the MIT/Expat license, see doc/COPYING
 
+# Checks the apt sources.list file for various issues
+#
+# Usage:
+# check-package-script <sources.list file> <log file>
+
 # FIXME: check for duplicate sources.list entries
 
 import re

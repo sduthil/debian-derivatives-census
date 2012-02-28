@@ -3,6 +3,19 @@
 # Copyright 2011 Paul Wise
 # Released under the MIT/Expat license, see doc/COPYING
 
+# Creates a configuration file and logo heads for Planet Debian derivatives
+# based on the logos and RSS feeds for the blogs of all the derivatives. The
+# resulting configuration file and heads must be manually merged with the
+# Planet Debian derivatives configuration and heads by someone who checks the
+# feeds and then commits the valid data to the Planet Debian SVN repository.
+# Planet Debian derivatives and more information on Planet Debian is here:
+#
+# http://planet.debian.org/deriv/
+# http://wiki.debian.org/PlanetDebian
+#
+# Usage:
+# derivatives-to-planet <list of derivatives> <planet config> <heads dir>
+
 import os
 import sys
 try: import Image

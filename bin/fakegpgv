@@ -3,6 +3,13 @@
 # Copyright 2011 Paul Wise
 # Released under the MIT/Expat license, see doc/COPYING
 
+# A hack to pretend that any OpenPGP-signed files are signed by a known and
+# trusted key. We need this because we do not nessecarily have trust paths to
+# all the people creating Debian derivatives.
+#
+# Usage:
+# Only run by apt, no need to run it manually
+
 STATUS=0
 while [ -n "$1" ]; do
        if [ $(expr substr "$1" 1 11) = "--status-fd" ]; then

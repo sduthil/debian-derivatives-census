@@ -1,23 +1,187 @@
-Welcome to the Debian derivatives census scripts!
+/-------------------------------------------------
+| Welcome to the Debian derivatives census scripts!
 
-The scripts can be run manually or via a framework based on make.
-If using the make-based framework data from each derivative is
-stored in a subdirectory of the var directory. The scripts are
-named in self-explanatory ways and take the names of input and
-output as command-line arguments.
+The Debian derivatives census scripts aim to take information added to the
+Debian derivatives census wiki pages and aggregate, expand, check, massage and
+transform it in order to integrate information useful to Debian contributors
+into the Debian infrastructure. More information about Debian derivatives and
+the derivatives census is available on these wiki pages:
 
-Makefile: the main makefile machinery
-Makefile.deriv: used by each derivative directory
-etc/wget.conf: sets some parameters
-bin/fakegpgv: a fake gpg verifier to silence apt
-bin/get-wiki-html: downloads the HTML version of a wiki page
-bin/get-wiki-text: downloads the text version of a wiki page
-bin/get-package-lists: downloads the package lists
-bin/wiki-html-to-derivatives-list: converts the census wiki page to a list of derivatives
-bin/wiki-text-to-sources-list: extracts a sources.list snippet from a wiki page
-var/census.html: the HTML version of the census wiki page
-var/template.txt: the text version of the census template wiki page
-var/derivatives: a list of names of derivative wiki pages
-var/*/wiki.txt: the text versions of the derivative wiki pages
-var/*/sources.list: the sources.list snippets
-var/*/apt/: the apt package lists
+http://wiki.debian.org/DerivativesFrontDesk
+http://wiki.debian.org/Derivatives/Census
+http://wiki.debian.org/Derivatives/Integration
+http://wiki.debian.org/Derivatives/CensusQA
+http://wiki.debian.org/Derivatives/CensusFull
+
+The scripts are run via a framework based on make. With the make-based
+framework, data from each derivative is stored in a subdirectory of the
+var directory. The scripts are named in self-explanatory ways, take the
+names of input and output as command-line arguments and contain comments
+indicating their purpose and if non-obvious, how they work.
+
+/-------------------------------------------------
+| Make machinery
+
+Makefile.{var,deriv} are symlinked from the var/ dir and from each of the
+directories for the derivatives. They setup environment variables, declare
+files to be generated, their dependencies and how to create them.
+
+Makefile: the main makefile machinery, used to setup var dir
+Makefile.var: used to aggregate files and setup derivative dirs
+Makefile.deriv: used by each derivative dir to create files
+
+/-------------------------------------------------
+| Scripts
+
+All the scripts are stored in the bin/ directory and run by the make-based
+framework.
+
+These download information from the Internet:
+
+get-blogs-rss
+get-distrowatch-stats
+get-favicon
+get-favicon-img
+get-logo-img
+get-package-lists
+get-wiki-html
+get-wiki-text
+
+These extract information from census wiki pages:
+
+wiki-html-to-derivatives-list
+wiki-text-to-blogs-list
+wiki-text-to-dev-blogs-list
+wiki-text-to-distrowatch
+wiki-text-to-homepage
+wiki-text-to-logo
+wiki-text-to-name
+wiki-text-to-sources-list
+
+These create configuration snippets for Debian infrastructure:
+
+derivative-to-debtags
+
+These aggregate configuration for Debian infrastructure:
+
+derivatives-to-planet
+aggregate-debtags
+
+These check the derivatives for potential issues:
+
+check-package-list
+check-sources-list
+
+These compare the derivatives with Debian:
+
+compare-source-package-list
+
+These are hacks to deal with the apt OpenPGP key stuff:
+
+fakegpgv
+gpgv
+
+/-------------------------------------------------
+| Configuration files
+
+These are stored in the etc/ directory.
+
+wget.conf: sets some parameters for wget
+
+/-------------------------------------------------
+| Data files
+
+These are stored in the var/ dir as well as the directories for each
+Debian derivative.
+
+census.html: the HTML version of the census wiki page
+derivatives: a list of names of derivative wiki pages
+debtags: list of Packages/Sources URLs for debtags.d.n
+distrowatch: distrowatch download statistics
+planet-config.ini: config file for Planet Debian derivatives
+heads/: small logos for Planet Debian derivatives
+template.txt: the text version of the census template wiki page
+
+These are also in the var/ dir but are only created on snapsnot.debian.org:
+
+patches: symlinks mapping human-readable patch names to SHA-1 based names
+md5-farm: symlinks mapping MD5 hashes to SHA-1 hashes
+sha1-farm: SHA-1 based filesystem of files never in Debian
+sha1-changelog: (name, version) tuples of source packages never in Debian
+sha1-patches: patches between source packages based on SHA-1 hashes
+sha1-lsdiff: lsdiff output from the patches
+
+These are stored in the derivative dirs and are extracted from wiki text:
+
+name: long name
+logo: URL to the logo
+blogs: URLs to the main blogs
+blogs-dev: URLs to the developer blogs
+homepage: URL to the homepage
+distrowatch: the identifier from distrowatch.com
+sources.list: the sources.list snippets
+
+These are stored in the derivative dirs and are downloaded from the Internet:
+
+wiki.txt: the text versions of the derivative wiki pages
+apt/: apt package data, including Release/Package/Sources files
+blogs-rss: the URLs to RSS feeds for the main blogs
+blogs-dev-rss: the URLs to RSS feeds for the developer blogs
+logo-img: the image of the logo
+
+These are stored in the derivative dirs and are configuration snippets:
+
+debtags: snippets for use by debtags.debian.net
+
+These are stored in the derivative dirs and are problem reports:
+
+check-sources-list: potential issues with the sources.list snippet
+check-package-list: potential issues with the apt metadata
+packages_binary_packages: list of binary packages in Packages files
+sources_binary_packages: list of binary packages in Sources files
+sources_source_packages: list of source packages in Packages files
+packages_source_packages: list of source packages in Sources files
+diff_source_packages: diff of sources_source_packages and packages_source_packages
+
+These are also in the derivs dirs but are only created on snapsnot.debian.org:
+
+patches: symlinks mapping human-readable patch names to SHA-1 based names
+sources.patches: package name/version and patches
+sources.links: URLs to modified source packages
+sources.stamp: implementation detail due to a deficiency in make
+sources.new: source packages that were never in detail
+sources.log: log file from the compare-source-package-list script
+
+/-------------------------------------------------
+| Package dependencies
+
+These packages are needed for all the scripts that are run by default:
+
+coreutils | busybox
+bash | dash | zsh | sh
+diffutils
+wget
+sed
+apt
+perl
+libxml-feed-perl
+python
+python-apt
+python-debian
+python-imaging
+
+This package is only needed for the download of favicons, which are not
+currently used by the census:
+
+libwww-favicon-perl
+
+The packages are only used when running the compare-source-package script,
+which is only run on snapshot.debian.org:
+
+python-psycopg2
+python-cjson (optional)
+python-yaml
+devscripts
+patchutils
+diffstat
+dpkg-dev

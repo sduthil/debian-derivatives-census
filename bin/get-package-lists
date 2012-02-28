@@ -3,6 +3,11 @@
 # Copyright 2011 Paul Wise
 # Released under the MIT/Expat license, see doc/COPYING
 
+# Downloads the apt metadata using apt-get and a sources.list
+#
+# Usage:
+# get-package-lists <sources.list> <apt dir>
+
 set -e
 test -f "$1" || exit 0
 apt-get update -q=2 -y \

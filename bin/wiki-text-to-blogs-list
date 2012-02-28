@@ -3,6 +3,11 @@
 # Copyright 2011 Paul Wise
 # Released under the MIT/Expat license, see doc/COPYING
 
+# Extract the main blog URLs from the wiki text
+#
+# Usage
+# wiki-text-to-blogs-list <wiki text file> <blog URLs file>
+
 set -e
 sed -r -n -e 's/^ *\* *Blog: (.*)/\1/p' "$1" | tr ' ' '\n' > "$2"
 find "$2" -empty -delete

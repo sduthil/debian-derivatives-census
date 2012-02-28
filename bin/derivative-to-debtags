@@ -3,6 +3,13 @@
 # Copyright 2012 Paul Wise
 # Released under the MIT/Expat license, see doc/COPYING
 
+# Converts the apt sources.list to a list of Packages/Sources files for the
+# debtags server to download and use on debtags.debian.net after aggregation by
+# the aggregate-debtags script.
+#
+# Usage:
+# derivative-to-debtags <shortname> <long name file> <sources.list> <apt dir> <debtags file>
+
 import os
 import sys
 import debian.deb822
