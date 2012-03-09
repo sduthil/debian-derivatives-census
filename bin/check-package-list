@@ -207,8 +207,8 @@ if sources_binary_packages != packages_binary_packages:
 	logging.warning('mismatched binary packages in Sources/Packages')
 	dump_list('sources_binary_packages', sources_binary_packages)
 	dump_list('packages_binary_packages', packages_binary_packages)
-	cmdline = ['diff', '--unified', 'packages_source_packages', 'sources_source_packages']
-	stdout = open('diff_source_packages', 'w')
+	cmdline = ['diff', '--unified', 'packages_binary_packages', 'sources_binary_packages']
+	stdout = open('diff_binary_packages', 'w')
 	process = subprocess.Popen(cmdline, stdout=stdout, stderr=subprocess.PIPE, preexec_fn=subprocess_setup)
 	output = process.communicate()[1]
 	stdout.close()
