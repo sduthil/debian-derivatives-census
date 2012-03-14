@@ -20,9 +20,15 @@ ALL = \
 all: $(ALL)
 
 $(derivatives): derivatives
-	mkdir --parents $@
-	ln -sf ../../Makefile.deriv $@/Makefile
-	$(MAKE) -C $@
+	if [ -d $@ -a -s $@/status ] ; then \
+		if [ $$( cat $@/status ) = active ] ; then \
+			$(MAKE) -C $@ ; \
+		fi \
+	else \
+		mkdir --parents $@ ; \
+		ln -sf ../../Makefile.deriv $@/Makefile ; \
+		$(MAKE) -C $@ ; \
+	fi
 
 clean: derivatives
 	for d in $$( cat $< ); do \
