@@ -6,6 +6,7 @@ export WGETRC=$(CURDIR)/../../etc/wget.conf
 
 ALL = \
 	wiki.txt \
+	status \
 	sources.list \
 	apt \
 	name \
@@ -29,6 +30,9 @@ clean:
 
 wiki.txt:
 	get-wiki-text Census/$(notdir $(CURDIR)) $@
+
+status: wiki.txt
+	wiki-text-to-status $^ $@
 
 sources.list: wiki.txt
 	wiki-text-to-sources-list $^ $@

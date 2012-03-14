@@ -1,0 +1,13 @@
+#!/bin/sh
+
+# Copyright 2011 Paul Wise
+# Released under the MIT/Expat license, see doc/COPYING
+
+# Extract the active/inactive status from the wiki text
+#
+# Usage
+# wiki-text-to-status <wiki text file> <status file>
+
+set -e
+sed -r -n -e 's_^ *\* *Status *[^:]*: ([^ ]+).*_\1_p' "$1" | tr ' ' '\n' > "$2"
+find "$2" -empty -delete
