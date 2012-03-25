@@ -562,7 +562,7 @@ def get_changelog_entries(tmp_dir, dsc_name, dsc_sha1):
 		return None
 
 	# Sanitise the debian dir and changelog file in case it is a symlink to outside
-	debian_dir = os.path.join(extract_path, 'debian','changelog')
+	debian_dir = os.path.join(extract_path, 'debian')
 	changelog_filename = os.path.join(debian_dir,'changelog')
 	if os.path.islink(debian_dir) or os.path.islink(changelog_filename):
 		logging.warning('debian dir or changelog is a symbolic link', dsc_name, extract_path)
