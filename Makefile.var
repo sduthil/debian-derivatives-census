@@ -38,7 +38,7 @@ clean: derivatives
 			rmdir "$$d" ; \
 		fi \
 	done
-	rm -f census.html derivatives template.txt
+	rm -rf $(ALL)
 
 census.html:
 	get-wiki-html Census $@
