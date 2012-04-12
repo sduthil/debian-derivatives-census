@@ -26,7 +26,7 @@ all: $(ALL)
 clean:
 	rm -rf $(ALL)
 
-.PHONY: all clean
+.PHONY: all clean check
 
 wiki.txt:
 	get-wiki-text Census/$(notdir $(CURDIR)) $@

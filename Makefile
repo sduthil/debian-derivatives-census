@@ -4,7 +4,7 @@
 export PATH:=$(CURDIR)/bin:$(PATH)
 export WGETRC=$(CURDIR)/etc/wget.conf
 
-.PHONY: var
+.PHONY: var clean
 
 all: var
 
