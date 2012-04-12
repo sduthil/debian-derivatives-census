@@ -27,7 +27,7 @@ ALL = \
 all: $(ALL)
 
 clean:
-	rm -rf $(ALL)
+	rm -rf $(ALL) *.remote-timestamp
 
 .PHONY: all clean check
 

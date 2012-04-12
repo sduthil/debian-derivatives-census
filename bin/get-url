@@ -1,0 +1,40 @@
+#!/bin/sh
+
+# Copyright 2012 Paul Wise
+# Released under the MIT/Expat license, see doc/COPYING
+
+# Downloads the URLs to files in a safe and useful way
+#
+# Usage:
+# get-url <URL to download> <where to save the file>
+
+# Get a temporary filename
+tmp="$(mktemp "$(readlink --canonicalize-missing "$2").tmp.XXXXXXXXXXXXXX")" || exit $?
+
+# Try to download a newer file
+out="$(curl --config "$CURLRC" --time-cond "$2.remote-timestamp" --output "$tmp" "$1" 2>&1)"
+
+# Preserve the exit value from curl
+ret=$?
+
+# We want to stop on errors from here on
+set -e
+
+# If curl failed then complain
+if [ $ret -ne 0 ]; then
+	echo "Error $ret downloading $1:"
+	echo "$out"
+# If the new file isn't empty or exactly the same then rename it
+elif [ -s "$tmp" ] && ! cmp --quiet "$tmp" "$2" ; then
+	# Save the remote modification date separately
+	touch --reference "$tmp" "$2.remote-timestamp"
+	# Move the new file over
+	mv --force "$tmp" "$2"
+	# Use a local timestamp for the file
+	touch "$2"
+fi
+
+# Clean up afterwards
+rm --force "$tmp"
+
+exit $ret

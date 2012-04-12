@@ -39,7 +39,7 @@ clean: derivatives
 			rmdir "$$d" ; \
 		fi \
 	done
-	rm -rf $(ALL)
+	rm -rf $(ALL) *.remote-timestamp
 
 census.html:
 	get-wiki-html Census $@

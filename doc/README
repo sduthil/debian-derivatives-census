@@ -162,6 +162,7 @@ coreutils | busybox
 bash | dash | zsh | sh
 diffutils
 wget
+curl
 sed
 apt
 perl
