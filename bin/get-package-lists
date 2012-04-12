@@ -10,12 +10,13 @@
 
 set -e
 test -f "$1" || exit 0
+apt="$(readlink -m "$2")"
 apt-get update -q=2 -y \
 	-o Acquire::http::User-Agent="Debian Derivatives Census QA bot" \
-	-o Dir="$(readlink -m "$2")" \
-	-o Dir::Etc="$(readlink -m "$2")" \
-	-o Dir::State="$(readlink -m "$2")" \
-	-o Dir::Cache="$(readlink -m "$2")" \
-	-o Dir::State::status="$(readlink -m "$2")/status" \
+	-o Dir="$apt" \
+	-o Dir::Etc="$apt" \
+	-o Dir::State="$apt" \
+	-o Dir::Cache="$apt" \
+	-o Dir::State::status="$apt/status" \
 	-o Dir::Etc::sourcelist="$(readlink -m "$1")" \
 	-o Dir::Bin::gpg=fakegpgv
