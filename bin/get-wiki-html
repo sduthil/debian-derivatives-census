@@ -8,6 +8,4 @@
 # Usage:
 # get-wiki-html <wiki page name> <wiki page file>
 
-set -e
-wget -q "http://wiki.debian.org/Derivatives/$1" -O - | tr -d '\r' > "$2"
-find "$2" -empty -delete
+exec get-url "http://wiki.debian.org/Derivatives/$1" "$2"

@@ -8,8 +8,6 @@
 # Usage:
 # get-logo-img <logo URLs file> <logo file>
 
-set -e
-if test -e "$1" ; then
-	wget -q "$(cat "$1")" -O - > "$2"
-	find "$2" -empty -delete
+if test -s "$1" ; then
+	exec get-url "$(cat "$1")" "$2"
 fi

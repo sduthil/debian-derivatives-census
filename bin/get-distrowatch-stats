@@ -8,6 +8,4 @@
 # Usage:
 # get-distrowatch-stats <distrowatch stats file>
 
-set -e
-wget -q http://distrowatch.com/text/fullphr-52.txt -O - > "$1"
-find "$1" -empty -delete
+exec get-url http://distrowatch.com/text/fullphr-52.txt "$1"
