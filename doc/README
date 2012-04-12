@@ -87,6 +87,7 @@ gpgv
 These are stored in the etc/ directory.
 
 wget.conf: sets some parameters for wget
+curl.conf: sets some parameters for curl
 
 /-------------------------------------------------
 | Data files
