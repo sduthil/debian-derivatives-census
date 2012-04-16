@@ -11,19 +11,40 @@
 # Usage:
 # get-blogs-rss <blog URL> <feed output file>
 
+use File::Compare;
+use File::Temp qw(tempfile);
 use XML::Feed;
 
 my @feeds;
+my $blog_count = 0;
 
-open( FILE, "< $ARGV[0]" ) or exit 0;
+# Exit if there are no blogs to check
+-s $ARGV[0] or exit 0;
+
+# Iterate through all the blogs
+open( FILE, "< $ARGV[0]" ) or die "Cannot open $ARGV[0]";
 while( <FILE> ) {
 	next if /^(\s)*$/;
+	$blog_count++;
 	chomp;
 	my ($feed) = XML::Feed->find_feeds($_);
 	push @feeds, $feed;
 }
 close FILE;
 
-open (FILE, "> $ARGV[1]") or exit 0;
+# Check the feed count
+my $feed_count = @feeds;
+$feed_count == $blog_count or die "Different number of feeds ($feed_count) to blogs ($blog_count)";
+
+# Write out the temporary file
+my ($tmp_fh, $tmp) = tempfile( $ARGV[1].".tmp.XXXXXXXXXXXXXX" );
+open (FILE, "> $tmp") or die "Cannot open temporary file $tmp";
 print FILE join("\n", @feeds);
 close (FILE);
+
+# Put the temporary file in place
+if (compare($tmp,$ARGV[1]) == 0) {
+	unlink($tmp);
+} else {
+	rename($tmp,$ARGV[1]);
+}
