@@ -3,7 +3,6 @@
 
 export PATH:=$(CURDIR)/../../bin:$(PATH)
 export CURLRC=$(CURDIR)/../../etc/curl.conf
-export WGETRC=$(CURDIR)/../../etc/wget.conf
 
 ALL = \
 	wiki.txt \

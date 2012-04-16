@@ -86,7 +86,6 @@ gpgv
 
 These are stored in the etc/ directory.
 
-wget.conf: sets some parameters for wget
 curl.conf: sets some parameters for curl
 
 /-------------------------------------------------
@@ -161,7 +160,6 @@ These packages are needed for all the scripts that are run by default:
 coreutils | busybox
 bash | dash | zsh | sh
 diffutils
-wget
 curl
 sed
 apt
