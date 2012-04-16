@@ -19,6 +19,8 @@ ALL = \
 	blogs-dev-rss \
 	debtags \
 	distrowatch \
+	check-package-list \
+	check-sources-list \
 	check
 
 all: $(ALL)
