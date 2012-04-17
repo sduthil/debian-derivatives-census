@@ -44,8 +44,6 @@ sources.list: wiki.txt
 	wiki-text-to-sources-list $^ $@
 
 apt: sources.list FORCE
-	mkdir --parents $@/partial $@/trusted.gpg.d $@/sources.list.d
-	touch $@/status $@/trusted.gpg
 	get-package-lists $< $@
 
 sources.patches sources.links sources.new sources.log: sources.stamp

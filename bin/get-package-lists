@@ -11,6 +11,17 @@
 set -e
 test -f "$1" || exit 0
 apt="$(readlink -m "$2")"
+
+# Save the local timestamp
+touch --reference "$apt" "$apt-local-timestamp" 2> /dev/null || true
+
+# Create needed files and directories
+test -d "$apt/trusted.gpg.d" || mkdir --parents "$apt/trusted.gpg.d"
+test -d "$apt/sources.list.d" || mkdir --parents "$apt/sources.list.d"
+test -f "$apt/status" || touch "$apt/status"
+test -f "$apt/trusted.gpg" || touch "$apt/trusted.gpg"
+
+# Update the apt metadata
 apt-get update -q=2 -y \
 	-o Acquire::http::User-Agent="Debian Derivatives Census QA bot" \
 	-o Dir="$apt" \
@@ -20,3 +31,44 @@ apt-get update -q=2 -y \
 	-o Dir::State::status="$apt/status" \
 	-o Dir::Etc::sourcelist="$(readlink -m "$1")" \
 	-o Dir::Bin::gpg=fakegpgv
+
+# Fix the timestamp on the apt dir
+# apt always updates the cache files :(
+
+# Try the Release files first
+for release in $(find "$apt/lists" -name "*Release" ! -name "Release.gpg") ; do
+	timestamp="$(grep '^Date: ' "$release" | sed 's/^Date: //')"
+	if [ -z "$timestamp" ] ; then
+		if [ "$release" -nt "$apt-new-remote-timestamp" -o ! -f "$apt-new-remote-timestamp" ] ; then
+			touch --reference "$release" "$apt-new-remote-timestamp"
+		fi
+	else
+		touch --date "$timestamp" "$apt-tmp-remote-timestamp"
+		if [ "$apt-tmp-remote-timestamp" -nt "$apt-new-remote-timestamp" -o ! -f "$apt-new-remote-timestamp" ] ; then
+			touch --date "$timestamp" "$apt-new-remote-timestamp"
+		fi
+		rm --force "$apt-tmp-remote-timestamp"
+	fi
+done
+
+# If there were no Release files, try the other files
+if [ -f "$apt-new-remote-timestamp" ] ; then
+	newest="$apt-new-remote-timestamp"
+else
+	newest="$apt/lists/$(ls -t "$apt/lists" | grep -vE '^(lock|partial)$' | head -n1)"
+fi
+
+# If one of the lists files is newer than the saved timestamp
+if [ "$newest" -nt "$apt.remote-timestamp" -o ! -f "$apt.remote-timestamp" ] ; then
+	# Save the latest timestamp
+	touch --reference "$newest" "$apt.remote-timestamp"
+	# Make the apt timestamp local instead of remote, bump it
+	touch "$apt"
+else
+	# Restore the old timestamp or make it local
+	touch --reference "$apt-local-timestamp" "$apt" 2>/dev/null || touch "$apt"
+fi
+
+# Drop the temporary timestamp storage files
+rm --force "$apt-new-remote-timestamp"
+rm --force "$apt-local-timestamp"
