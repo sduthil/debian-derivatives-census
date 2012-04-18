@@ -38,6 +38,8 @@ framework.
 
 These download information from the Internet:
 
+get-url
+get-url-eol-fix
 get-blogs-rss
 get-distrowatch-stats
 get-favicon
@@ -151,6 +153,8 @@ sources.links: URLs to modified source packages
 sources.stamp: implementation detail due to a deficiency in make
 sources.new: source packages that were never in detail
 sources.log: log file from the compare-source-package-list script
+
+Files named *.remote-timestamp store remote timestamps to reduce downloading.
 
 /-------------------------------------------------
 | Package dependencies
