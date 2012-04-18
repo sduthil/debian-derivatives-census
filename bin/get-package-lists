@@ -40,7 +40,7 @@ for release in $(find "$apt/lists" -name "*Release" ! -name "Release.gpg") ; do
 	timestamp="$(grep '^Date: ' "$release" | sed 's/^Date: //')"
 	if [ ! -z "$timestamp" ] ; then
 		touch --date "$timestamp" "$apt-tmp-remote-timestamp" 2> /dev/null || timestamp=broken
-		if [ "$apt-tmp-remote-timestamp" -nt "$apt-new-remote-timestamp" -o ! -f "$apt-new-remote-timestamp" ] ; then
+		if [ "$timestamp" != broken -a \( "$apt-tmp-remote-timestamp" -nt "$apt-new-remote-timestamp" -o ! -f "$apt-new-remote-timestamp" \) ] ; then
 			touch --date "$timestamp" "$apt-new-remote-timestamp"
 		fi
 		rm --force "$apt-tmp-remote-timestamp"
