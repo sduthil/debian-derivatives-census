@@ -60,13 +60,20 @@ wiki-text-to-logo
 wiki-text-to-name
 wiki-text-to-sources-list
 
+These convert data files to be suitable for Debian infrastructure:
+
+logo-to-planet-head
+
 These create configuration snippets for Debian infrastructure:
 
+derivative-to-planet-config
+derivative-to-planet-head
 derivative-to-debtags
 
 These aggregate configuration for Debian infrastructure:
 
-derivatives-to-planet
+aggregate-planet-config
+aggregate-planet-heads
 aggregate-debtags
 
 These check the derivatives for potential issues:
@@ -76,6 +83,8 @@ check-sources-list
 
 These compare the derivatives with Debian:
 
+compare-planet-config
+compare-planet-heads
 compare-source-package-list
 
 These are hacks to deal with the apt OpenPGP key stuff:

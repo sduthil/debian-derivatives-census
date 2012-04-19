@@ -1,0 +1,17 @@
+#!/bin/sh
+
+# Copyright 2012 Paul Wise
+# Released under the MIT/Expat license, see doc/COPYING
+
+# Downloads the plain text versions of Debian wiki pages
+#
+# Usage:
+# compare-planet-config <planet svn> <new planet config>
+
+set -e
+if [ ! -f "$1/config/config.ini.deriv" -o ! -f "$2" ] ; then
+	exit 0
+fi
+sed '0,/^#\{40,\}/d' "$1/config/config.ini.deriv" | \
+	tail -n +2 | \
+	diff --unified - "$2" || true

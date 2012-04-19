@@ -17,6 +17,8 @@ ALL = \
 	blogs-rss \
 	blogs-dev \
 	blogs-dev-rss \
+	planet-config \
+	planet-head \
 	debtags \
 	distrowatch \
 	check-package-list \
@@ -81,6 +83,12 @@ blogs-dev: wiki.txt
 
 blogs-dev-rss: blogs-dev FORCE
 	get-blogs-rss $< $@
+
+planet-config: name blogs-rss blogs-dev-rss planet-head
+	derivative-to-planet-config $(notdir $(CURDIR)) $^ $@
+
+planet-head: logo-img
+	logo-to-planet-head $^ $@
 
 debtags: name sources.list
 	derivative-to-debtags $(notdir $(CURDIR)) $^ apt $@

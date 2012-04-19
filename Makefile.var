@@ -12,7 +12,11 @@ ALL = \
 	census.html \
 	derivatives \
 	$(derivatives) \
-	planet-config.ini \
+	planet-svn \
+	planet-config \
+	planet-heads \
+	compare-planet-config \
+	compare-planet-heads \
 	debtags \
 	distrowatch \
 	template.txt
@@ -53,8 +57,20 @@ derivatives: census.html
 template.txt: FORCE
 	get-wiki-text CensusTemplate $@
 
-planet-config.ini: derivatives
-	derivatives-to-planet $^ $@ heads/deriv
+planet-svn: FORCE
+	get-planet-svn $@
+
+planet-config: $(derivatives)
+	aggregate-planet-config $^ $@
+
+planet-heads: $(derivatives)
+	aggregate-planet-heads $^ $@
+
+compare-planet-config: planet-svn planet-config
+	compare-planet-config $^
+
+compare-planet-heads: planet-svn planet-heads
+	compare-planet-heads $^
 
 debtags: derivatives distrowatch $(derivatives)
 	aggregate-debtags $< distrowatch $@

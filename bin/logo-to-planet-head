@@ -1,0 +1,35 @@
+#!/usr/bin/python
+
+# Copyright 2012 Paul Wise
+# Released under the MIT/Expat license, see doc/COPYING
+
+# Creates a logo head for Planet Debian derivatives based on the logos.
+#
+# Usage:
+# logo-to-planet-head <logo image> <planet head image>
+
+import os
+import sys
+
+default_size = (100,100)
+
+logo = sys.argv[1]
+head = sys.argv[2]
+
+def remove(file):
+	try: os.remove(file)
+	except OSError: pass
+
+def symlink(source, link):
+	try: os.symlink(source, link)
+	except OSError: pass
+
+try:
+	import Image
+	img = Image.open(logo)
+	img.thumbnail(default_size,Image.ANTIALIAS)
+	img.save(head, 'PNG')
+except:
+	remove(head)
+	if os.path.exists(logo):
+		symlink(os.path.relpath(logo,head),head)

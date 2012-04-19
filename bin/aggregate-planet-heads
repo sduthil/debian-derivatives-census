@@ -1,0 +1,24 @@
+#!/bin/sh
+
+# Copyright 2012 Paul Wise
+# Released under the MIT/Expat license, see doc/COPYING
+
+# Aggregates all the derivatives' logo heads into one dir.
+#
+# Usage:
+# aggregate-planet-heads <derivatives> <heads directory>
+
+set -e
+eval heads="\$$#"
+while test $# -gt 1; do
+    derivatives="$derivatives $1"
+    shift
+done
+mkdir -p "$heads"
+for d in $derivatives ; do
+	if [ -e "$d/planet-head" ] ; then \
+		ln --symbolic --force "../$d/planet-head" "$heads/$d"
+	else
+		rm --force "$heads/$d"
+	fi
+done

@@ -1,0 +1,12 @@
+#!/bin/sh
+
+# Copyright 2012 Paul Wise
+# Released under the MIT/Expat license, see doc/COPYING
+
+# Downloads the Planet Debian config from the SVN repository
+#
+# Usage:
+# get-planet-svn <svn dir>
+
+# svn co does svn up for existing stuff
+svn co --quiet svn://svn.debian.org/svn/planet-debian/trunk "$1"

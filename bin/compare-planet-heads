@@ -1,0 +1,23 @@
+#!/usr/bin/python
+
+# Copyright 2012 Paul Wise
+# Released under the MIT/Expat license, see doc/COPYING
+
+# Compare the Planet Derivatives heads.
+#
+# Usage:
+# compare-planet-heads <planet svn> <planet heads>
+
+import os
+import sys
+from filecmp import dircmp
+
+cmp = dircmp(os.path.join(sys.argv[1],'heads','deriv'), sys.argv[2], ['.svn'])
+
+# The default report is fugly and inflexible so we reimplement it here
+if cmp.left_only:    print 'Only in %s: %s' % (cmp.left, ', '.join(sorted(cmp.left_only)))
+if cmp.right_only:   print 'Only in %s: %s' % (cmp.right, ', '.join(sorted(cmp.right_only)))
+if cmp.diff_files:   print 'Modified files: %s' % ', '.join(sorted(cmp.diff_files))
+if cmp.funny_files:  print 'Common trouble: %s' % ', '.join(sorted(cmp.funny_files))
+if cmp.common_dirs:  print 'Common subdirs: %s' % ', '.join(sorted(cmp.common_dirs))
+if cmp.common_funny: print 'Common weirdness: %s' % ', '.join(sorted(cmp.common_funny))
