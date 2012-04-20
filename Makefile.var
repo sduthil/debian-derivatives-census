@@ -9,6 +9,9 @@ derivatives := $(shell cat derivatives)
 .PHONY: all clean $(derivatives)
 
 ALL = \
+	HEADER.html \
+	FOOTER.html \
+	.htaccess \
 	census.html \
 	derivatives \
 	$(derivatives) \
@@ -47,6 +50,15 @@ clean: derivatives
 		fi \
 	done
 	rm -rf $(ALL) *.remote-timestamp
+
+HEADER.html:
+	ln -sf ../doc/HEADER.var.html $@
+
+FOOTER.html:
+	ln -sf ../doc/FOOTER.html $@
+
+.htaccess:
+	ln -sf ../etc/htaccess.var $@
 
 census.html: FORCE
 	get-wiki-html Census $@

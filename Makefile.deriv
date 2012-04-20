@@ -5,6 +5,8 @@ export PATH:=$(CURDIR)/../../bin:$(PATH)
 export CURLRC=$(CURDIR)/../../etc/curl.conf
 
 ALL = \
+	HEADER.html \
+	.htaccess \
 	wiki.txt \
 	status \
 	sources.list \
@@ -35,6 +37,12 @@ clean:
 # FORCE is a trick to get the targets that depend on it
 # to always run even when their file already exists.
 FORCE:
+
+HEADER.html:
+	ln -sf ../../doc/HEADER.deriv.html $@
+
+.htaccess:
+	ln -sf ../../etc/htaccess.deriv $@
 
 wiki.txt: FORCE
 	get-wiki-text Census/$(notdir $(CURDIR)) $@

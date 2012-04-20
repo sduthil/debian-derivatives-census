@@ -921,6 +921,10 @@ conn.close()
 filename = sys.argv[3]
 data = patches
 if data:
+	if not os.path.exists(os.path.join(global_patch_dir,'HEADER.html')):
+		symlink('../../doc/HEADER.patches.html',os.path.join(global_patch_dir,'HEADER.html'))
+	if not os.path.exists(os.path.join(global_patch_dir,'.htaccess')):
+		symlink('../../etc/htaccess.patches',os.path.join(global_patch_dir,'.htaccess'))
 	data = list(set(data))
 	data.sort(cmp=lambda a,b: cmp(a[0],b[0]) or apt_pkg.version_compare(a[1],b[1]) or cmp(a[2],b[2]) or apt_pkg.version_compare(a[3],b[3]))
 	output_data = {}

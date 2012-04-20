@@ -98,6 +98,7 @@ gpgv
 These are stored in the etc/ directory.
 
 curl.conf: sets some parameters for curl
+htaccess.*: sets some parameters for Apache
 
 /-------------------------------------------------
 | Data files
@@ -105,6 +106,9 @@ curl.conf: sets some parameters for curl
 These are stored in the var/ dir as well as the directories for each
 Debian derivative.
 
+HEADER.html: a symlink to documentation for visitors via HTTP
+FOOTER.html: a symlink to a footer for visitors via HTTP
+.htaccess: sets some parameters for Apache
 census.html: the HTML version of the census wiki page
 derivatives: a list of names of derivative wiki pages
 debtags: list of Packages/Sources URLs for debtags.d.n
@@ -142,6 +146,8 @@ logo-img: the image of the logo
 
 These are stored in the derivative dirs and are configuration snippets:
 
+HEADER.html: a symlink to documentation for visitors via HTTP
+.htaccess: sets some parameters for Apache
 debtags: snippets for use by debtags.debian.net
 
 These are stored in the derivative dirs and are problem reports:
