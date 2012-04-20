@@ -39,6 +39,15 @@ for derivative in derivatives_f:
 	derivative = derivative.strip()
 
 	try:
+		f = open(os.path.join(derivative,'status'))
+		status = f.read().strip()
+		f.close()
+		if status and status != 'active':
+			continue
+	except:
+		pass
+
+	try:
 		f = open(os.path.join(derivative,'debtags'))
 		debtags = f.read().strip()
 		f.close()

@@ -16,6 +16,11 @@ while test $# -gt 1; do
 done
 mkdir -p "$heads"
 for d in $derivatives ; do
+	if [ -d $d -a -s $d/status ] ; then
+		if [ $( cat $d/status ) != active ] ; then
+			continue
+		fi
+	fi
 	if [ -e "$d/planet-head" ] ; then \
 		ln --symbolic --force "../$d/planet-head" "$heads/$d"
 	else

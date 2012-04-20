@@ -27,6 +27,15 @@ new_config = []
 
 for d in derivatives:
 	try:
+		f = open(os.path.join(derivative,'status'))
+		status = f.read().strip()
+		f.close()
+		if status and status != 'active':
+			continue
+	except:
+		pass
+
+	try:
 		f = open(os.path.join(d,'planet-config'))
 		new_config.append(f.read())
 		f.close()
