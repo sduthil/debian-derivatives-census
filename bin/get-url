@@ -28,6 +28,8 @@ if [ $ret -ne 0 ]; then
 elif [ -s "$tmp" ] && ! cmp --quiet "$tmp" "$2" ; then
 	# Save the remote modification date separately
 	touch --reference "$tmp" "$2.remote-timestamp"
+	# Fix the permissions
+	chmod --reference "$2.remote-timestamp" "$tmp"
 	# Move the new file over
 	mv --force "$tmp" "$2"
 	# Use a local timestamp for the file

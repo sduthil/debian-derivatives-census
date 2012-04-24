@@ -46,5 +46,12 @@ close (FILE);
 if (compare($tmp,$ARGV[1]) == 0) {
 	unlink($tmp);
 } else {
+	my $dummy = $tmp.".dummy";
+	open (FILE, "> $dummy");
+	close (FILE);
+	my ($dev, $ino, $mode, @junk) = stat $dummy;
+	$mode &= 07777;
+	chmod($mode,$tmp);
+	unlink($dummy);
 	rename($tmp,$ARGV[1]);
 }

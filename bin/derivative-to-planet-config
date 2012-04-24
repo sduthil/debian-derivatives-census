@@ -84,4 +84,8 @@ if new_config and new_config != old_config:
 	tmp = tempfile(prefix=config+'.tmp.', dir='', delete=False)
 	tmp.write(new_config)
 	tmp.close()
+	dummy = open(tmp.name+'.dummy','w')
+	dummy.close()
+	os.chmod(tmp.name, os.stat(dummy.name).st_mode)
+	os.remove(dummy.name)
 	os.rename(tmp.name, config)
