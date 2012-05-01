@@ -12,7 +12,7 @@
 import os
 import sys
 try: import Image
-except: pass
+except ImportError: pass
 from tempfile import NamedTemporaryFile as tempfile
 
 name = sys.argv[1].strip()
@@ -27,20 +27,20 @@ try:
 	longname = f.read().split('\n')[0].strip()
 	longname_dev = longname + ' developers'
 	f.close()
-except:
+except IOError:
 	longname = None
 	longname_dev = None
 
 try:
 	head = Image.open(head)
-except:
+except (NameError, IOError):
 	head = None
 
 try:
 	f = open(config)
 	old_config = config.read()
 	f.close()
-except:
+except IOError:
 	old_config = None
 
 def config_snippet(rss, name, longname, head):
@@ -66,7 +66,7 @@ try:
 	feeds = [config_snippet(line,name, longname, head) for line in rf]
 	new_config += [feed for feed in feeds if feed]
 	rf.close()
-except:
+except IOError:
 	pass
 
 try:
@@ -74,7 +74,7 @@ try:
 	feeds = [config_snippet(line,name, longname_dev, head) for line in rf]
 	new_config += [feed for feed in feeds if feed]
 	rf.close()
-except:
+except IOError:
 	pass
 
 new_config = ['\n'.join(feed) for feed in new_config]

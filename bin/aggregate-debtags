@@ -44,14 +44,14 @@ for derivative in derivatives_f:
 		f.close()
 		if status and status != 'active':
 			continue
-	except:
+	except IOError:
 		pass
 
 	try:
 		f = open(os.path.join(derivative,'debtags'))
 		debtags = f.read().strip()
 		f.close()
-	except:
+	except IOError:
 		continue
 
 	if use_distrowatch:
@@ -59,7 +59,7 @@ for derivative in derivatives_f:
 			f = open(os.path.join(derivative,'distrowatch'))
 			sort = distrowatch[f.readline().strip()]
 			f.close()
-		except:
+		except IOError:
 			sort = 0
 	else:
 		sort -= 1

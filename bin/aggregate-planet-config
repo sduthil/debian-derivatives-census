@@ -20,7 +20,7 @@ try:
 	f = open(config)
 	old_config = config.read()
 	f.close()
-except:
+except IOError:
 	old_config = None
 
 new_config = []
@@ -32,14 +32,14 @@ for d in derivatives:
 		f.close()
 		if status and status != 'active':
 			continue
-	except:
+	except IOError:
 		pass
 
 	try:
 		f = open(os.path.join(d,'planet-config'))
 		new_config.append(f.read())
 		f.close()
-	except:
+	except IOError:
 		pass
 
 new_config = '\n'.join(new_config)

@@ -29,7 +29,7 @@ try:
 	img = Image.open(logo)
 	img.thumbnail(default_size,Image.ANTIALIAS)
 	img.save(head, 'PNG')
-except:
+except (ImportError, IOError):
 	remove(head)
 	if os.path.exists(logo):
 		symlink(os.path.relpath(logo,head),head)

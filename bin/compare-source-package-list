@@ -70,7 +70,7 @@ from debian import deb822, changelog
 import apt_pkg
 import psycopg2
 try: import cjson as json
-except: import json
+except ImportError: import json
 
 # Helper functions for python stuff with annoying error handling
 
@@ -276,7 +276,7 @@ def check_hash_cache(dir, hash, hash_type, url):
 	try:
 		result = os.readlink(path)
 		path = os.path.join(os.path.dirname(path), result)
-	except:
+	except IOError:
 		logging.debug('does not exist in hash cache: %s %s', hash_type, hash)
 		return download_and_check_hash(url, dir, hash, hash_type)
 	logging.debug('exists in hash cache: %s %s', hash_type, hash)
@@ -783,7 +783,7 @@ def check_source_package(source_entry, srcpkg):
 		if '..' in dir.split('/'):
 			logging.warning('could not process source package %s %s: possibly malicious dir: %s', name, version, dir)
 			return None
-	except:
+	except KeyError:
 		logging.warning('could not process source package %s %s', name, version)
 		return None
 	logging.debug('started processing source package %s %s', name, version)
@@ -890,7 +890,7 @@ def process_sources(source_entries, lists_dir):
 		for source_entry in source:
 			fn = os.path.join(lists_dir, source_entry.describe.rstrip(')').rpartition('(')[2])
 			try: f = file(fn)
-			except: continue
+			except IOError: continue
 			for srcpkg in deb822.Sources.iter_paragraphs(f):
 				actions = check_source_package(source_entry, srcpkg)
 				if actions:

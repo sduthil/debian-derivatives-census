@@ -24,7 +24,7 @@ archs = ['alpha', 'amd64', 'arm', 'armel', 'armhf', 'hppa', 'hurd-i386', 'i386',
 
 # Setup logging 
 try: os.remove(sys.argv[2])
-except: pass
+except OSError: pass
 logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.DEBUG, filename=sys.argv[2])
 
 # Read sources.list
@@ -33,7 +33,7 @@ try:
 	sources_list_f = open(sources_list)
 	sources_list = sources_list_f.readlines()
 	sources_list_f.close()
-except:
+except IOError:
 	logging.warning('no sources list')
 	sys.exit()
 

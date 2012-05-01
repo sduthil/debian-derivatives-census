@@ -92,7 +92,7 @@ for item in acquire.items:
 		if not os.path.exists(fn):
 			fn = fn.replace('InRelease','Release')
 		try: f = file(fn)
-		except:
+		except IOError:
 			logging.warning('missing Release file %s', fn)
 			continue
 		if 'InRelease' not in fn:
@@ -106,14 +106,14 @@ for item in acquire.items:
 				if len(x[short_type]) != size:
 					logging.warning('release %s: %s: %s hash has unexpected size %s instead of %s', item.desc_uri, x['name'], type, len(x[short_type]), size)
 				try: int(x[short_type], 16)
-				except: logging.warning('release %s: %s: %s hash is not a proper hexadecimal hash string (%s)', item.desc_uri, x['name'], type, x[short_type])
+				except ValueError: logging.warning('release %s: %s: %s hash is not a proper hexadecimal hash string (%s)', item.desc_uri, x['name'], type, x[short_type])
 		f.close()
 
 for source in source_entries:
 	for s in source:
 		fn = os.path.join(lists_dir, s.describe.rstrip(')').rpartition('(')[2])
 		try: f = file(fn)
-		except:
+		except IOError:
 			logging.warning('missing Sources file %s', fn)
 			continue
 		count = 0
@@ -134,7 +134,7 @@ for source in source_entries:
 					if len(x[short_type]) != size:
 						logging.warning('source %s %s: %s: %s hash has unexpected size %s instead of %s', name, version, x['name'], type, len(x[short_type]), size)
 					try: int(x[short_type], 16)
-					except: logging.warning('source %s %s: %s hash is not a proper hexadecimal hash string (%s)', name, version, x['name'], type, x[short_type])
+					except ValueError: logging.warning('source %s %s: %s hash is not a proper hexadecimal hash string (%s)', name, version, x['name'], type, x[short_type])
 				dsc = [x for x in srcpkg[header] if x['name'].endswith('.dsc')]
 				if not len(dsc):
 					logging.warning('source %s %s: %s hashes but no hash for the dsc file', name, version, type)
@@ -150,7 +150,7 @@ for binary in binary_entries:
 	for b in binary:
 		fn = os.path.join(lists_dir, b.describe.rstrip(')').rpartition('(')[2])
 		try: f = file(fn)
-		except:
+		except IOError:
 			logging.warning('missing Packages file %s', fn)
 			continue
 		count = 0
@@ -174,7 +174,7 @@ for binary in binary_entries:
 				if len(binpkg[header]) != size:
 					logging.warning('binary %s %s: %s hash has unexpected size %s instead of %s', name, version, type, len(binpkg[header]), size)
 				try: int(binpkg[header], 16)
-				except: logging.warning('binary %s %s: %s hash is not a proper hexadecimal hash string (%s)', name, version, type, binpkg[header])
+				except ValueError: logging.warning('binary %s %s: %s hash is not a proper hexadecimal hash string (%s)', name, version, type, binpkg[header])
 		if count == 0:
 			logging.info('empty Packages file: %s', b.describe )
 		f.close()
