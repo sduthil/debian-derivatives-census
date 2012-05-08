@@ -27,7 +27,7 @@ new_config = []
 
 for d in derivatives:
 	try:
-		f = open(os.path.join(derivative,'status'))
+		f = open(os.path.join(d,'status'))
 		status = f.read().strip()
 		f.close()
 		if status and status != 'active':
