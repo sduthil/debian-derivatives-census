@@ -30,7 +30,7 @@ apt-get update -q=2 -y \
 	-o Dir::Cache="$apt" \
 	-o Dir::State::status="$apt/status" \
 	-o Dir::Etc::sourcelist="$(readlink -m "$1")" \
-	-o Dir::Bin::gpg=fakegpgv
+	-o Dir::Bin::gpg=fakegpgv || true
 
 # Fix the timestamp on the apt dir
 # apt always updates the cache files :(
