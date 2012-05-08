@@ -18,7 +18,7 @@ config = sys.argv[-1]
 
 try:
 	f = open(config)
-	old_config = config.read()
+	old_config = f.read()
 	f.close()
 except IOError:
 	old_config = None
