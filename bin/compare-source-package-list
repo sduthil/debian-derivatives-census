@@ -276,7 +276,7 @@ def check_hash_cache(dir, hash, hash_type, url):
 	try:
 		result = os.readlink(path)
 		path = os.path.join(os.path.dirname(path), result)
-	except IOError:
+	except OSError:
 		logging.debug('does not exist in hash cache: %s %s', hash_type, hash)
 		return download_and_check_hash(url, dir, hash, hash_type)
 	logging.debug('exists in hash cache: %s %s', hash_type, hash)
