@@ -283,6 +283,7 @@ def check_hash_cache(dir, hash, hash_type, url):
 	sha1 = os.path.basename(path)
 	if hash_path_exists(snapshot_cache_dir, sha1):
 		logging.debug('exists in snapshot sha1 cache: %s', sha1)
+		remove(hash_path(sha1_cache_dir,sha1))
 		return (True, sha1)
 	elif hash_path_exists(sha1_cache_dir, sha1):
 		logging.debug('exists in derivatives sha1 cache: %s', sha1)
@@ -292,6 +293,7 @@ def check_sha1_cache(sha1, url):
 	logging.debug('checking sha1 caches: %s', sha1)
 	if hash_path_exists(snapshot_cache_dir, sha1):
 		logging.debug('exists in snapshot sha1 cache: %s', sha1)
+		remove(hash_path(sha1_cache_dir,sha1))
 		return (True, sha1)
 	elif hash_path_exists(sha1_cache_dir, sha1):
 		logging.debug('exists in derivatives sha1 cache: %s', sha1)
