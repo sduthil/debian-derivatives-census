@@ -207,7 +207,6 @@ def download_and_check_hash(url, dir, hash, hash_type):
 		if hash_path_exists(snapshot_cache_dir, sha1):
 			snapshot_path = hash_path(snapshot_cache_dir, sha1)
 			symlink(snapshot_path, path)
-			symlink(snapshot_path, sha1_path)
 			logging.debug('exists in snapshot sha1 cache: %s %s %s %s', hash_type, hash, sha1, url)
 			return (True, sha1)
 		else:
