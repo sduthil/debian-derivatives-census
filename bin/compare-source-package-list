@@ -943,18 +943,16 @@ if data:
 	for item in data:
 		debian_name, debian_version, name, version = item[:4]
 		patches = item[4:]
-		debian_name = str(debian_name)
-		debian_version = str(debian_version)
 		if debian_name not in output_data:
 			output_data[debian_name] = {}
 		if debian_version not in output_data[debian_name]:
 			output_data[debian_name][debian_version] = []
 		item = {}
-		item['name'] = str(name)
-		item['version'] = str(version)
-		item['patches'] = [str(patch) for patch in patches]
+		item['name'] = name
+		item['version'] = version
+		item['patches'] = patches
 		output_data[debian_name][debian_version].append(item)
-	yaml.dump(output_data, output)
+	yaml.safe_dump(output_data, output)
 	output.close()
 else:
 	remove(filename)
@@ -967,18 +965,16 @@ if data:
 	output_data = {}
 	output = file(os.path.abspath(filename), 'wb')
 	for debian_name, debian_version, name, version, dsc_url in data:
-		debian_name = str(debian_name)
-		debian_version = str(debian_version)
 		if debian_name not in output_data:
 			output_data[debian_name] = {}
 		if debian_version not in output_data[debian_name]:
 			output_data[debian_name][debian_version] = []
 		item = {}
-		item['name'] = str(name)
-		item['version'] = str(version)
-		item['dsc'] = str(dsc_url)
+		item['name'] = name
+		item['version'] = version
+		item['dsc'] = dsc_url
 		output_data[debian_name][debian_version].append(item)
-	yaml.dump(output_data, output)
+	yaml.safe_dump(output_data, output)
 	output.close()
 else:
 	remove(filename)
@@ -991,14 +987,12 @@ if data:
 	output_data = {}
 	output = file(os.path.abspath(filename), 'wb')
 	for name, version, dsc_url in data:
-		name = str(name)
-		version = str(version)
 		if name not in output_data:
 			output_data[name] = {}
 		if version not in output_data[name]:
 			output_data[name][version] = []
 		output_data[name][version].append(str(dsc_url))
-	yaml.dump(output_data, output)
+	yaml.safe_dump(output_data, output)
 	output.close()
 else:
 	remove(filename)
