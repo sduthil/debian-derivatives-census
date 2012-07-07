@@ -56,10 +56,10 @@ sources.list: wiki.txt
 apt: sources.list FORCE
 	get-package-lists $< $@
 
-sources.patches sources.links sources.new sources.log: sources.stamp
+sources.files sources.patches sources.links sources.new sources.log: sources.stamp
 
 sources.stamp: sources.list apt
-	compare-source-package-list $^ sources.patches sources.links sources.new sources.log
+	compare-source-package-list $^ sources.files sources.patches sources.links sources.new sources.log
 	touch $@
 
 name: wiki.txt

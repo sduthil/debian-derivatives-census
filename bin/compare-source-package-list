@@ -128,8 +128,8 @@ sources_list = apt_pkg.SourceList()
 sources_list.read_main_list()
 conn = psycopg2.connect("service=snapshot-guest")
 cur = conn.cursor()
-remove(sys.argv[6])
-logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.DEBUG, filename=sys.argv[6])
+remove(sys.argv[7])
+logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.DEBUG, filename=sys.argv[7])
 
 # Voodoo
 lists_dir = apt_pkg.config.find_dir('Dir::State::lists')
@@ -815,6 +815,7 @@ def check_source_package(source_entry, srcpkg):
 		logging.debug('finished processing source package %s %s: dsc unmodified', name, version)
 		return None
 	else:
+		files = [(dsc_sha1, dsc_hash_type, dsc_hash)]
 		parts_unmodified = []
 		parts_modified = []
 		parts_unknown = []
@@ -835,6 +836,7 @@ def check_source_package(source_entry, srcpkg):
 			if part_status == 'unmodified': parts_unmodified.append((part_sha1, part_name))
 			elif part_status == 'modified': parts_modified.append((part_sha1, part_name))
 			else: parts_unknown.append((part_sha1, part_name))
+			if part_status == 'modified': files.append((part_sha1, part_hash_type, part_hash))
 
 		all_parts_unmodified = (len(parts_unmodified) == len(parts))
 		all_parts_modified = (len(parts_modified) == len(parts))
@@ -848,15 +850,15 @@ def check_source_package(source_entry, srcpkg):
 			if dsc_status == 'modified':
 				logging.info('source package %s %s: unmodified, but dsc different', name, version)
 				modifies_dsc_files += 1
-			return None
+			return (files, None, None, None)
 		else:
 			logging.debug('some parts modified, looking for derived version %s %s', name, version)
 			if not dsc_sha1:
 				logging.warning('finished processing source package %s %s: sha1 missing for dsc file', name, version)
-				return None
+				return (files, None, None, None)
 			if parts_unknown:
 				logging.warning('finished processing source package %s %s: sha1 missing for some parts', name, version)
-				return None
+				return (files, None, None, None)
 			new = None
 			link = None
 			patch = None
@@ -888,9 +890,10 @@ def check_source_package(source_entry, srcpkg):
 				new = (name, version, dsc_url)
 			rmtree(tmp_dir)
 			logging.debug('finished processing source package %s %s: all done', name, version)
-			return (patch, link, new)
+			return (files, patch, link, new)
 
 def process_sources(source_entries, lists_dir):
+	files = []
 	patches = []
 	links = []
 	new = []
@@ -902,7 +905,10 @@ def process_sources(source_entries, lists_dir):
 			for srcpkg in deb822.Sources.iter_paragraphs(f):
 				actions = check_source_package(source_entry, srcpkg)
 				if actions:
-					action_patch, action_link, action_new = actions
+					action_files, action_patch, action_link, action_new = actions
+					if action_files:
+						files.append(action_files)
+						logging.debug('action: return files %s', ' '.join([' '.join(action) for action in action_files]))
 					if action_patch:
 						patches.append(action_patch)
 						logging.debug('action: return patches %s', ' '.join([' '.join(action) for action in action_patch]))
@@ -915,11 +921,11 @@ def process_sources(source_entries, lists_dir):
 				logging.debug('done')
 				logging.debug('')
 			f.close()
-	return (patches, links, new)
+	return (files, patches, links, new)
 
 logging.debug('processing distribution %s', derivative_short_name)
 
-patches, links, new = process_sources(source_entries, lists_dir)
+files, patches, links, new = process_sources(source_entries, lists_dir)
 
 # Done with the database, close the connection
 cur.close()
@@ -927,6 +933,23 @@ conn.close()
 
 # Write out the results
 filename = sys.argv[3]
+data = files
+if data:
+	output_data = {}
+	for package in data:
+		for modified_file in package:
+			sha1, hash_type, hash = modified_file
+			if sha1 not in output_data:
+				output_data[sha1] = {}
+			if hash_type != 'sha1' and hash_type not in output_data[sha1]:
+				output_data[sha1][hash_type] = hash
+			elif hash_type != 'sha1' and hash != output_data[sha1][hash_type]:
+				logging.warning('hashes mismatched: %s: %s %s != %s', sha1, hash_type, hash, output_data[sha1][hash_type])
+	output = file(os.path.abspath(filename), 'wb')
+	yaml.safe_dump(output_data, output)
+	output.close()
+
+filename = sys.argv[4]
 data = patches
 if data:
 	if not os.path.exists(os.path.join(global_patch_dir,'HEADER.html')):
@@ -956,7 +979,7 @@ if data:
 else:
 	remove(filename)
 
-filename = sys.argv[4]
+filename = sys.argv[5]
 data = links
 if data:
 	data = list(set(data))
@@ -978,7 +1001,7 @@ if data:
 else:
 	remove(filename)
 
-filename = sys.argv[5]
+filename = sys.argv[6]
 data = new
 if data:
 	data = list(set(data))
