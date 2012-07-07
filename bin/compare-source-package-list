@@ -816,7 +816,8 @@ def check_source_package(source_entry, srcpkg):
 		return None
 	else:
 		parts_unmodified = []
-		parts_modified = parts_unknown = 0
+		parts_modified = []
+		parts_unknown = []
 		for part in parts:
 			part_name = part['name']
 			if '/' in part_name or part_name == '..':
@@ -832,13 +833,13 @@ def check_source_package(source_entry, srcpkg):
 			logging.debug('checked part status: %s %s %s', part_status, part_sha1, part_url)
 			if 'sha1' not in part and part_sha1: part['sha1'] = part_sha1
 			if part_status == 'unmodified': parts_unmodified.append((part_sha1, part_name))
-			elif part_status == 'modified': parts_modified += 1
-			else: parts_unknown += 1
+			elif part_status == 'modified': parts_modified.append((part_sha1, part_name))
+			else: parts_unknown.append((part_sha1, part_name))
 
 		all_parts_unmodified = (len(parts_unmodified) == len(parts))
-		all_parts_modified = (parts_modified == len(parts))
+		all_parts_modified = (len(parts_modified) == len(parts))
 		parts_unmodified = list(set(parts_unmodified))
-		logging.debug('source package status %s %s: dsc %s, %s parts unmodified, %s parts modified, %s parts unknown', name, version, dsc_status, len(parts_unmodified), parts_modified, parts_unknown)
+		logging.debug('source package status %s %s: dsc %s, %s parts unmodified, %s parts modified, %s parts unknown', name, version, dsc_status, len(parts_unmodified), len(parts_modified), len(parts_unknown))
 
 		if all_parts_unmodified:
 			# Ignore the srcpkg since we know all the parts were
