@@ -1,0 +1,72 @@
+#!/usr/bin/python
+
+# Copyright 2012 Paul Wise
+# Released under the MIT/Expat license, see doc/COPYING
+
+# Aggregates the list of changed source packages
+#
+# Usage:
+# aggregate-source-patches <list of derivatives> <source patches list>
+
+import os
+import sys
+import yaml
+
+def shortslug(name):
+	return name[:4] if name.startswith('lib') else name[0]
+
+url = 'http://dex.alioth.debian.org/census/patches'
+derivatives = sys.argv[1:-2]
+sources_patches = sys.argv[-2]
+sources_patches_pts = sys.argv[-1]
+
+
+# Load the old information about patched versions
+try:
+	f = open(sources_patches)
+	old_patches = yaml.load(f)
+	f.close()
+except IOError:
+	old_patches = []
+
+
+# Load new data about patches from individual derivatives
+new_patches = []
+for deriv in derivatives:
+	# We explicitly do not ignore inactive derivatives since 
+	# their files may go missing at any time.
+	try:
+		f = open(os.path.join(deriv,'sources.patches'))
+		data = yaml.load(f)
+		f.close()
+	except IOError:
+		continue
+	for patch in data:
+		patch['deriv'] = deriv
+		new_patches.append(patch)
+
+
+# Merge the old patches with the new patches
+for patch in old_patches:
+	obsolete = patch.pop('obsolete', False)
+	try: new_patches.remove(patch)
+	except ValueError: obsolete = True
+	if obsolete: patch['obsolete'] = obsolete
+
+patches = old_patches + new_patches
+
+
+# Calculate the output
+
+# List of package names and URLs for the PTS
+# Need to exclude Ubuntu since the PTS has other links to its patches
+debian_names = set([patch['debian_name'] for patch in patches if not patch.get('obsolete', False) and patch['deriv'] is not 'Ubuntu'])
+patches_pts = dict((name, '/'.join((url,shortslug(name),name,''))) for name in debian_names)
+f = open(sources_patches_pts,'wb')
+yaml.dump(patches_pts, f)
+f.close()
+
+# The general patch metadata
+f = open(sources_patches,'wb')
+yaml.dump(patches, f)
+f.close()
