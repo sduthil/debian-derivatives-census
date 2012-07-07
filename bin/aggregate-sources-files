@@ -1,0 +1,54 @@
+#!/usr/bin/python
+
+# Copyright 2012 Paul Wise
+# Released under the MIT/Expat license, see doc/COPYING
+
+# Aggregates the source files from different derivatives and
+# tracks files no longer referenced by any derivative.
+#
+# Usage:
+# aggregate-source-files <list of derivatives> <source files list>
+
+import os
+import sys
+import yaml
+
+derivatives = sys.argv[1:-1]
+sources_files = sys.argv[-1]
+
+try:
+	f = open(sources_files)
+	files = yaml.load(f)
+	f.close()
+except IOError:
+	files = {}
+
+new_files = []
+
+for deriv in derivatives:
+	# We explicitly do not ignore inactive derivatives since
+	# their files may go missing at any time.
+	try:
+		f = open(os.path.join(deriv,'sources.files'))
+		data = yaml.load(f)
+		f.close()
+	except IOError:
+		continue
+	for sha1, attribs in data.items():
+		new_files.append(sha1)
+		if sha1 not in files:
+			files[sha1] = attribs
+		else:
+			files[sha1].pop('obsolete', None)
+			for hash_type, hash in attribs.items():
+				if hash_type not in files[sha1]:
+					files[sha1][hash_type] = hash
+				elif files[sha1][hash_type] != hash:
+					print 'WARNING SHOULD NOT HAPPEN'
+
+for sha1 in set(files)-set(new_files):
+	files[sha1]['obsolete'] = True
+
+f = open(sources_files,'wb')
+yaml.dump(files, f)
+f.close()

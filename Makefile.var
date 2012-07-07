@@ -21,6 +21,7 @@ ALL = \
 	compare-planet-config \
 	compare-planet-heads \
 	debtags \
+	sources.files \
 	distrowatch \
 	template.txt
 
@@ -86,6 +87,9 @@ compare-planet-heads: planet-svn planet-heads
 
 debtags: derivatives distrowatch $(derivatives)
 	aggregate-debtags $< distrowatch $@
+
+sources.files: $(derivatives)
+	aggregate-sources-files $^ $@
 
 distrowatch: FORCE
 	get-distrowatch-stats $@
