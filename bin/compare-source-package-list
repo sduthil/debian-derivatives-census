@@ -875,7 +875,7 @@ def check_source_package(source_entry, srcpkg):
 						debian_tmp_dir = prepare_debian(debian_dsc_name, debian_dsc_sha1, debian_parts)
 						patch_created = create_patch(tmp_dir, dsc_name, dsc_sha1, debian_tmp_dir, debian_dsc_name, debian_dsc_sha1)
 						patch_names = present_patch(name, version, dsc_sha1, debian_name, debian_version, debian_dsc_sha1)
-						if patch_names: patch = (debian_name, debian_version, name, version) + patch_names
+						if patch_names: patch = (debian_name, debian_version, debian_dsc_sha1, name, version, dsc_sha1, [part[0] for part in parts_modified], patch_names)
 						rmtree(debian_tmp_dir)
 					else:
 						logging.warning('source package %s %s: could not get Debian info for %s %s: %s', name, version, debian_name, debian_version, debian_info)
@@ -905,7 +905,7 @@ def process_sources(source_entries, lists_dir):
 					action_patch, action_link, action_new = actions
 					if action_patch:
 						patches.append(action_patch)
-						logging.debug('action: return patches %s', ' '.join(action_patch))
+						logging.debug('action: return patches %s', ' '.join([' '.join(action) for action in action_patch]))
 					if action_link:
 						links.append(action_link)
 						logging.debug('action: return links to modified source packages %s', ' '.join(action_link))
@@ -937,22 +937,20 @@ if data:
 		symlink('../../../doc/HEADER.patches.html',os.path.join(deriv_patch_dir,'HEADER.html'))
 	if not os.path.exists(os.path.join(global_patch_dir,'.htaccess')):
 		symlink('../../../etc/htaccess.patches',os.path.join(deriv_patch_dir,'.htaccess'))
-	data = list(set(data))
-	data.sort(cmp=lambda a,b: cmp(a[0],b[0]) or apt_pkg.version_compare(a[1],b[1]) or cmp(a[2],b[2]) or apt_pkg.version_compare(a[3],b[3]))
-	output_data = {}
-	output = file(os.path.abspath(filename), 'wb')
+	output_data = []
 	for item in data:
-		debian_name, debian_version, name, version = item[:4]
-		patches = item[4:]
-		if debian_name not in output_data:
-			output_data[debian_name] = {}
-		if debian_version not in output_data[debian_name]:
-			output_data[debian_name][debian_version] = []
+		debian_name, debian_version, debian_sha1, name, version, sha1, parts_sha1, patches = item
 		item = {}
+		item['debian_name'] = debian_name
+		item['debian_version'] = debian_version
+		item['debian_sha1'] = debian_sha1
 		item['name'] = name
 		item['version'] = version
+		item['sha1'] = sha1
 		item['patches'] = patches
-		output_data[debian_name][debian_version].append(item)
+		item['parts'] = parts_sha1
+		output_data.append(item)
+	output = file(os.path.abspath(filename), 'wb')
 	yaml.safe_dump(output_data, output)
 	output.close()
 else:
