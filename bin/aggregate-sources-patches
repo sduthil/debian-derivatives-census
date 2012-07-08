@@ -60,7 +60,7 @@ patches = old_patches + new_patches
 
 # List of package names and URLs for the PTS
 # Need to exclude Ubuntu since the PTS has other links to its patches
-debian_names = set([patch['debian_name'] for patch in patches if not patch.get('obsolete', False) and patch['deriv'] is not 'Ubuntu'])
+debian_names = set([patch['debian_name'] for patch in patches if not patch.get('obsolete', False) and patch['deriv'] != 'Ubuntu'])
 patches_pts = dict((name, '/'.join((url,shortslug(name),name,''))) for name in debian_names)
 f = open(sources_patches_pts,'wb')
 yaml.dump(patches_pts, f)
