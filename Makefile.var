@@ -91,7 +91,7 @@ sources.files: $(derivatives)
 	aggregate-sources-files $^ $@
 
 sources.patches: $(derivatives)
-	aggregate-sources-patches $^ $@
+	aggregate-sources-patches $^ $@ $@.pts
 
 distrowatch: FORCE
 	get-distrowatch-stats $@
