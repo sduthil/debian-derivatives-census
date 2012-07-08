@@ -21,8 +21,6 @@ ALL = \
 	compare-planet-config \
 	compare-planet-heads \
 	debtags \
-	sources.files \
-	sources.patches \
 	distrowatch \
 	template.txt
 
