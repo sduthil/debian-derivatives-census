@@ -57,7 +57,7 @@ for derivative in derivatives_f:
 	if use_distrowatch:
 		try:
 			f = open(os.path.join(derivative,'distrowatch'))
-			sort = distrowatch[f.readline().strip()]
+			sort = distrowatch.get(f.readline().strip(), 0)
 			f.close()
 		except IOError:
 			sort = 0
