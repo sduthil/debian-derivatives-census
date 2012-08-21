@@ -113,7 +113,7 @@ for uri, dists in repos.items():
 		if 'deb' not in types and 'deb-src' not in types:
 			logging.warning('weird dist without deb/deb-src entries: %s %s', uri, dist)
 		elif 'deb' not in types:
-			logging.warning('deb-src without matching deb-src entry: %s %s %s', uri, dist, ','.join(types['deb-src']))
+			logging.warning('deb-src without matching deb entry: %s %s %s', uri, dist, ','.join(types['deb-src']))
 		elif 'deb-src' not in types:
 			logging.warning('deb without matching deb-src entry: %s %s %s', uri, dist, ','.join(types['deb']))
 		elif types['deb'] != types['deb-src']:
