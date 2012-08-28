@@ -52,6 +52,8 @@
 # FIXME:   derivative is older than Debian
 # FIXME:   derivative renamed the source package
 # FIXME:   just a really big diff
+# FIXME: when there are multiple dsc files in snapshots, prefer the debian/debian-archive one
+# FIXME: when the source package is ancient and the dsc is missing, make a fake one to use
 
 import os
 import sys
