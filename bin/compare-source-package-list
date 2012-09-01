@@ -54,6 +54,7 @@
 # FIXME:   just a really big diff
 # FIXME: when there are multiple dsc files in snapshots, prefer the debian/debian-archive one
 # FIXME: when the source package is ancient and the dsc is missing, make a fake one to use
+# FIXME: add an in-memory cache of hashes so that hashes in multiple releases hit the disk once
 
 import os
 import sys
