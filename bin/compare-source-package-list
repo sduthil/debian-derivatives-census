@@ -564,7 +564,7 @@ def get_changelog_entries(tmp_dir, dsc_name, dsc_sha1):
 	if process.returncode:
 		logging.warning('dpkg-source reported failure to extract %s to %s:', dsc_name, extract_path)
 		logging.warning(output)
-		cmdline = ['ls', '-lR', tmp_dir]
+		cmdline = ['ls', '-lR', '--time-style=+', tmp_dir]
 		process = subprocess.Popen(cmdline, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, preexec_fn=subprocess_setup)
 		output = process.communicate()[0]
 		logging.warning(output)
@@ -693,7 +693,7 @@ def create_patch(tmp_dir, dsc_name, dsc_sha1, debian_tmp_dir, debian_dsc_name, d
 		if process.returncode == 255:
 			logging.warning('debdiff reported failure %s %s:', debian_dsc_name, dsc_name)
 			logging.warning(output)
-			cmdline = ['ls', '-lR', tmp_dir, debian_tmp_dir]
+			cmdline = ['ls', '-lR', '--time-style=+', tmp_dir, debian_tmp_dir]
 			process = subprocess.Popen(cmdline, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, preexec_fn=subprocess_setup)
 			output = process.communicate()[0]
 			logging.warning(output)
@@ -705,7 +705,7 @@ def create_patch(tmp_dir, dsc_name, dsc_sha1, debian_tmp_dir, debian_dsc_name, d
 		elif process.returncode != 1:
 			logging.warning('debdiff reported unknown return code %s %s %s:', process.returncode, debian_dsc_name, dsc_name)
 			logging.warning(output)
-			cmdline = ['ls', '-lR', tmp_dir, debian_tmp_dir]
+			cmdline = ['ls', '-lR', '--time-style=+', tmp_dir, debian_tmp_dir]
 			process = subprocess.Popen(cmdline, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, preexec_fn=subprocess_setup)
 			output = process.communicate()[0]
 			logging.warning(output)
