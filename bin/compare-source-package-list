@@ -554,18 +554,17 @@ def get_changelog_entries(tmp_dir, dsc_name, dsc_sha1):
 
 	# Preparation
 	extract_path = os.path.join(tmp_dir,'extracted')
-	dsc_path = os.path.join(tmp_dir,dsc_name)
 
 	# Unpack the source tree
 	logging.debug('unpacking source package %s', dsc_name)
-	cmdline = ['dpkg-source', '-x', dsc_path, extract_path]
-	process = subprocess.Popen(cmdline, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, preexec_fn=subprocess_setup)
+	cmdline = ['dpkg-source', '-x', dsc_name, 'extracted']
+	process = subprocess.Popen(cmdline, cwd=tmp_dir, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, preexec_fn=subprocess_setup)
 	output = process.communicate()[0]
 	if process.returncode:
-		logging.warning('dpkg-source reported failure to extract %s to %s:', dsc_name, extract_path)
+		logging.warning('dpkg-source reported failure to extract %s:', dsc_name)
 		logging.warning(output)
-		cmdline = ['ls', '-lR', '--time-style=+', tmp_dir]
-		process = subprocess.Popen(cmdline, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, preexec_fn=subprocess_setup)
+		cmdline = ['ls', '-lR', '--time-style=+']
+		process = subprocess.Popen(cmdline, cwd=tmp_dir, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, preexec_fn=subprocess_setup)
 		output = process.communicate()[0]
 		logging.warning(output)
 		rmtree(extract_path)
@@ -693,10 +692,12 @@ def create_patch(tmp_dir, dsc_name, dsc_sha1, debian_tmp_dir, debian_dsc_name, d
 		if process.returncode == 255:
 			logging.warning('debdiff reported failure %s %s:', debian_dsc_name, dsc_name)
 			logging.warning(output)
-			cmdline = ['ls', '-lR', '--time-style=+', tmp_dir, debian_tmp_dir]
-			process = subprocess.Popen(cmdline, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, preexec_fn=subprocess_setup)
-			output = process.communicate()[0]
-			logging.warning(output)
+			cmdline = ['ls', '-lR', '--time-style=+']
+			for name, dir in (derivative_short_name, tmp_dir), ('Debian', debian_tmp_dir):
+				logging.warning('dir listing for %s:', name)
+				process = subprocess.Popen(cmdline, cwd=dir, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, preexec_fn=subprocess_setup)
+				output = process.communicate()[0]
+				logging.warning(output)
 			return False
 		elif process.returncode == 0:
 			logging.info('derivative repackaged in an identical way %s %s', debian_dsc_name, dsc_name)
@@ -705,10 +706,12 @@ def create_patch(tmp_dir, dsc_name, dsc_sha1, debian_tmp_dir, debian_dsc_name, d
 		elif process.returncode != 1:
 			logging.warning('debdiff reported unknown return code %s %s %s:', process.returncode, debian_dsc_name, dsc_name)
 			logging.warning(output)
-			cmdline = ['ls', '-lR', '--time-style=+', tmp_dir, debian_tmp_dir]
-			process = subprocess.Popen(cmdline, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, preexec_fn=subprocess_setup)
-			output = process.communicate()[0]
-			logging.warning(output)
+			cmdline = ['ls', '-lR', '--time-style=+']
+			for name, dir in (derivative_short_name, tmp_dir), ('Debian', debian_tmp_dir):
+				logging.warning('dir listing for %s:', name)
+				process = subprocess.Popen(cmdline, cwd=dir, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, preexec_fn=subprocess_setup)
+				output = process.communicate()[0]
+				logging.warning(output)
 			return False
 
 	# Filter the main patch to include only the debian/ directory
