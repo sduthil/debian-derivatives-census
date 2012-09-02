@@ -574,24 +574,24 @@ def get_changelog_entries(tmp_dir, dsc_name, dsc_sha1):
 	debian_dir = os.path.join(extract_path, 'debian')
 	changelog_filename = os.path.join(debian_dir,'changelog')
 	if os.path.islink(debian_dir) or os.path.islink(changelog_filename):
-		logging.warning('debian dir or changelog is a symbolic link', dsc_name, extract_path)
+		logging.warning('debian dir or changelog is a symbolic link %s', dsc_name)
 		rmtree(extract_path)
 		return None
 
 	# Check if the changelog exists
 	if not os.path.exists(changelog_filename):
-		logging.warning('could not find changelog in %s %s', dsc_name, extract_path)
+		logging.warning('could not find changelog in %s', dsc_name)
 		rmtree(extract_path)
 		return None
 
 	# Find out which source package is the most likely derivative
-	logging.debug('parsing changelog %s', changelog_filename)
+	logging.debug('parsing changelog for %s', dsc_name)
 	changelog_file = open(changelog_filename)
 	changelog_obj = changelog.Changelog(changelog_file)
 	try:
 		changelog_entries = [(entry.package, str(entry._raw_version)) for entry in changelog_obj]
 	except:
-		logging.warning('could not read changelog from %s %s', dsc_name, extract_path)
+		logging.warning('could not read changelog from %s', dsc_name)
 		rmtree(extract_path)
 		return None
 	del changelog_obj
