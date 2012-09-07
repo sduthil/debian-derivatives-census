@@ -109,6 +109,7 @@ sha1_changelog_dir = os.path.abspath('../sha1-changelog')
 deriv_patch_dir = os.path.abspath('patches')
 global_patch_dir = os.path.abspath('../patches')
 snapshot_cache_dir = '/srv/snapshot.debian.org/farm'
+patch_too_large = os.path.abspath('../../doc/patch-too-large.txt')
 checksum_headers = ('Checksums-Sha1', 'Checksums-Sha256', 'Files')
 user_agent = 'Debian Derivatives Census QA bot'
 timeout = 60
@@ -729,6 +730,15 @@ def create_patch(tmp_dir, dsc_name, dsc_sha1, debian_tmp_dir, debian_dsc_name, d
 		f.write('\n')
 		f.write(filterdiff_output)
 		f.close()
+
+	# Patches > 100MB are probably not that useful, replace them with a link
+	for path in path_everything, path_debian:
+		try:
+			if os.path.getsize(path) > 104857600:
+				remove(path)
+				symlink(os.path.relpath(patch_too_large, os.path.dirname(path)), path)
+		except OSError:
+			pass
 
 	return True
 
