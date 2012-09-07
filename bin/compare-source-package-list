@@ -99,6 +99,14 @@ def subprocess_setup():
     # non-Python subprocesses expect.
     signal.signal(signal.SIGPIPE, signal.SIG_DFL)
 
+# We need to map apt_pkg.version_compare return values to cmp return values
+# The documentation is incorrect: http://bugs.debian.org/680891
+def apt_version_cmp(a, b):
+	ret = apt_pkg.version_compare(a, b)
+	if ret < 0: return -1
+	elif ret > 0: return 1
+	else return 0
+
 # Config
 md5_cache_dir = os.path.abspath('../md5-farm')
 sha1_cache_dir = os.path.abspath('../sha1-farm')
@@ -654,9 +662,9 @@ def find_derived_from(tmp_dir, name, version, dsc_name, dsc_sha1, parts_unmodifi
 				return (entry_name, entry_version)
 	if possibly_derived_from:
 		logging.debug('finding closest entry in possibly derived from')
-		possibly_derived_from.sort(cmp=lambda a,b: apt_pkg.version_compare(b[1],a[1]))
+		possibly_derived_from.sort(cmp=lambda a,b: apt_version_cmp(b[1],a[1]))
 		for entry_name, entry_version in possibly_derived_from:
-			if name == entry_name and apt_pkg.version_compare(version, entry_version) <= 0:
+			if name == entry_name and apt_version_cmp(version, entry_version) <= 0:
 				logging.debug('%s %s is a lower version', entry_name, entry_version)
 				return (entry_name, entry_version)
 		entry = possibly_derived_from[-1]
@@ -1000,7 +1008,7 @@ filename = sys.argv[5]
 data = links
 if data:
 	data = list(set(data))
-	data.sort(cmp=lambda a,b: cmp(a[0],b[0]) or apt_pkg.version_compare(a[1],b[1]) or cmp(a[2],b[2]) or apt_pkg.version_compare(a[3],b[3]))
+	data.sort(cmp=lambda a,b: cmp(a[0],b[0]) or apt_version_cmp(a[1],b[1]) or cmp(a[2],b[2]) or apt_version_cmp(a[3],b[3]))
 	output_data = {}
 	output = file(os.path.abspath(filename), 'wb')
 	for debian_name, debian_version, name, version, dsc_url in data:
@@ -1022,7 +1030,7 @@ filename = sys.argv[6]
 data = new
 if data:
 	data = list(set(data))
-	data.sort(cmp=lambda a,b: cmp(a[0],b[0]) or apt_pkg.version_compare(a[1],b[1]) or cmp(a[2],b[2]))
+	data.sort(cmp=lambda a,b: cmp(a[0],b[0]) or apt_version_cmp(a[1],b[1]) or cmp(a[2],b[2]))
 	output_data = {}
 	output = file(os.path.abspath(filename), 'wb')
 	for name, version, dsc_url in data:
