@@ -105,7 +105,7 @@ def apt_version_cmp(a, b):
 	ret = apt_pkg.version_compare(a, b)
 	if ret < 0: return -1
 	elif ret > 0: return 1
-	else return 0
+	else: return 0
 
 # Config
 md5_cache_dir = os.path.abspath('../md5-farm')
