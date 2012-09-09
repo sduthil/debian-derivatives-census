@@ -687,8 +687,6 @@ def create_patch(tmp_dir, dsc_name, dsc_sha1, debian_tmp_dir, debian_dsc_name, d
 	debian_dsc_path = os.path.join(debian_tmp_dir, debian_dsc_name)
 	path_everything = sha1_patch_path(debian_dsc_sha1, dsc_sha1)
 	path_debian = sha1_patch_path(debian_dsc_sha1, dsc_sha1, 'debian')
-	path_filtered = sha1_patch_path(debian_dsc_sha1, dsc_sha1, 'filtered')
-	path_debian_filtered = sha1_patch_path(debian_dsc_sha1, dsc_sha1, 'debian-filtered')
 
 	# Generate the main patch
 	if not os.path.exists(path_everything) and os.path.exists(debian_dsc_path) and os.path.exists(dsc_path):
@@ -864,7 +862,6 @@ def check_source_package(source_entry, srcpkg):
 			if part_status == 'modified': files.append((part_sha1, part_hash_type, part_hash))
 
 		all_parts_unmodified = (len(parts_unmodified) == len(parts))
-		all_parts_modified = (len(parts_modified) == len(parts))
 		parts_unmodified = list(set(parts_unmodified))
 		logging.debug('source package status %s %s: dsc %s, %s parts unmodified, %s parts modified, %s parts unknown', name, version, dsc_status, len(parts_unmodified), len(parts_modified), len(parts_unknown))
 
@@ -901,8 +898,9 @@ def check_source_package(source_entry, srcpkg):
 						logging.debug('Debian source package %s %s dsc found %s %s', debian_name, debian_version, debian_dsc_name, debian_dsc_sha1)
 						debian_tmp_dir = prepare_debian(debian_dsc_name, debian_dsc_sha1, debian_parts)
 						patch_created = create_patch(tmp_dir, dsc_name, dsc_sha1, debian_tmp_dir, debian_dsc_name, debian_dsc_sha1)
-						patch_names = present_patch(name, version, dsc_sha1, debian_name, debian_version, debian_dsc_sha1)
-						if patch_names: patch = (debian_name, debian_version, debian_dsc_sha1, name, version, dsc_sha1, [part[0] for part in parts_modified], patch_names)
+						if patch_created:
+							patch_names = present_patch(name, version, dsc_sha1, debian_name, debian_version, debian_dsc_sha1)
+							if patch_names: patch = (debian_name, debian_version, debian_dsc_sha1, name, version, dsc_sha1, [part[0] for part in parts_modified], patch_names)
 						rmtree(debian_tmp_dir)
 					else:
 						logging.warning('source package %s %s: could not get Debian info for %s %s: %s', name, version, debian_name, debian_version, debian_info)
