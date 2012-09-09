@@ -27,7 +27,7 @@ while( <FILE> ) {
 	next if /^(\s)*$/;
 	$blog_count++;
 	chomp;
-	my ($feed) = XML::Feed->find_feeds($_);
+	my ($feed) = XML::Feed->find_feeds($_) or die XML::Feed->errstr;
 	push @feeds, $feed;
 }
 close FILE;
