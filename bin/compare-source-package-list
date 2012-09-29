@@ -664,8 +664,8 @@ def find_derived_from(tmp_dir, name, version, dsc_name, dsc_sha1, parts_unmodifi
 		logging.debug('finding closest entry in possibly derived from')
 		possibly_derived_from.sort(cmp=lambda a,b: apt_version_cmp(b[1],a[1]))
 		for entry_name, entry_version in possibly_derived_from:
-			if name == entry_name and apt_version_cmp(version, entry_version) <= 0:
-				logging.debug('%s %s is a lower version', entry_name, entry_version)
+			if name == entry_name and apt_version_cmp(version, entry_version) >= 0:
+				logging.debug('%s %s is an equal or lower version', entry_name, entry_version)
 				return (entry_name, entry_version)
 		entry = possibly_derived_from[-1]
 		entry_name, entry_version = entry
