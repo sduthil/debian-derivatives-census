@@ -1,0 +1,14 @@
+#!/bin/sh
+
+# Copyright 2012 Paul Wise
+# Released under the MIT/Expat license, see doc/COPYING
+
+# Extract the dpkg vendor from the wiki text
+# This should be the result of dpkg-vendor --query Vendor
+#
+# Usage
+# wiki-text-to-vendor <wiki text file> <vendor file>
+
+set -e
+sed -r -n -e 's/^ *\* *dpkg vendor: (.*)/\1/p' "$1" | tr ' ' '\n' > "$2"
+find "$2" -empty -delete
