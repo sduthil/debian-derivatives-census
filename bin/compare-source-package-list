@@ -55,6 +55,7 @@
 # FIXME: add an in-memory cache of hashes so that hashes in multiple releases hit the disk once
 # FIXME: deal with rate-limited websites like alioth that do not like many requests
 
+import re
 import os
 import sys
 import httplib
@@ -73,6 +74,7 @@ import apt_pkg
 import psycopg2
 try: import simplejson as json
 except ImportError: import json
+import struct
 
 # Helper functions for python stuff with annoying error handling
 
@@ -141,6 +143,60 @@ source_entries = [[i for i in x.index_files if i.label=='Debian Source Index'] f
 derivative_short_name = os.path.basename(os.getcwd())
 modifies_dsc_files = 0
 repackaged_but_identical = 0
+
+# Generic helper functions
+
+def uncompressed_size(filename):
+	uc_size = 0
+	file_size = os.path.getsize(filename)
+	with open(filename, 'rb') as f:
+		# *.gz
+		magic = f.read(4)
+		if magic[:2] == "\x1f\x8b":
+			f.seek(-4, 2)
+			data = f.read()
+			uc_size = struct.unpack('<I', data)[0]
+		# *.bz2
+		elif magic[:3] == 'BZh':
+			# Crude estimate based on average compression ratio of 25%
+			uc_size = file_size*4
+		# *.xz
+		elif magic == '7zXZ':
+			cmdline = ['xz', '--verbose', '--list', filename]
+			process = subprocess.Popen(cmdline, cwd=dir, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, preexec_fn=subprocess_setup)
+			output = process.communicate()[0]
+			if process.returncode:
+				logging.warning('xz reported failure to check size of %s:', filename)
+				logging.warning(output)
+			else:
+				for line in output:
+					line = line.strip()
+					if line.startswith('Uncompressed size:'):
+						match = re.match(r'Uncompressed size:[^\(]*\(([0-9,]+) *B\)', line)
+						if match: uc_size = int(''.join(match.group(1).split(',')))
+						else: logging.warning('xz reported weird output for %s: %s', filename, line)
+		# *.lz
+		elif magic == 'LZIP':
+			f.seek(-16, 2)
+			data = f.read(8)
+			uc_size = struct.unpack('<Q', data)[0]
+	return max(file_size, uc_size)
+
+def total_uncompressed_size(parts):
+	size = 0
+	for part in parts:
+		if 'sha1' in part:
+			path = hash_path(snapshot_cache_dir, part['sha1'])
+			if not os.path.exists(path): path = hash_path(sha1_cache_dir, part['sha1'])
+		elif 'sha256' in part: path = hash_path(sha256_cache_dir, part['sha256'])
+		elif 'md5sum' in part: path = hash_path(md5_cache_dir, part['md5sum'])
+		else: continue
+		size += uncompressed_size(path)
+	return size
+
+def tmp_space():
+	stats = os.statvfs(tempfile.gettempdir())
+	return stats.f_frsize*stats.f_bavail
 
 # Helper functions for generating path names
 
@@ -945,6 +1001,10 @@ def check_source_package(source_entry, srcpkg):
 			new = None
 			link = None
 			patch = None
+			size = total_uncompressed_size(parts)
+			if size > tmp_space():
+				logging.warning('finished processing source package %s %s: not enough space for temporary files: changelog extraction', name, version)
+				return (files, None, None, None)
 			tmp_dir = prepare(dsc_name, dsc_sha1, parts)
 			derived_from = find_derived_from(tmp_dir, name, version, dsc_name, dsc_sha1, parts_unmodified)
 			if derived_from:
@@ -957,6 +1017,11 @@ def check_source_package(source_entry, srcpkg):
 					if debian_info:
 						debian_dsc_sha1, debian_dsc_name, debian_parts = debian_info
 						logging.debug('Debian source package %s %s dsc found %s %s', debian_name, debian_version, debian_dsc_name, debian_dsc_sha1)
+						size += total_uncompressed_size(debian_parts)
+						if size > tmp_space():
+							logging.warning('finished processing source package %s %s: not enough space for temporary files: diffing', name, version)
+							rmtree(tmp_dir)
+							return (files, None, None, None)
 						debian_tmp_dir = prepare_debian(debian_dsc_name, debian_dsc_sha1, debian_parts)
 						if debian_tmp_dir:
 							patch_created = create_patch(tmp_dir, dsc_name, dsc_sha1, debian_tmp_dir, debian_dsc_name, debian_dsc_sha1)
