@@ -123,7 +123,7 @@ for source in source_entries:
 			version = srcpkg['Version']
 			sources_source_packages.append((name, version))
 			if 'Binary' in srcpkg:
-				sources_binary_packages += [(name, version) for name in srcpkg['Binary'].split(', ')]
+				sources_binary_packages += [(name.strip(), version) for name in srcpkg['Binary'].split(',')]
 			else:
 				logging.info('no binary packages for source package %s %s', name, version)
 			for type, (header, size, short_type) in source_hash_types.items():
