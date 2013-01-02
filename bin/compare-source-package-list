@@ -41,7 +41,6 @@
 # FIXME: write something to clean up old files and patches
 # FIXME: don't unpack or make a patch when we don't have all the parts
 # FIXME: don't make a patch when we were not able to unpack the source package
-# FIXME: deal with permissions errors on unpack??
 # FIXME: cleanup files at start of run
 # FIXME: extract new debian/patches/ patches
 # FIXME: print out packages that are no longer in Debian
@@ -589,8 +588,10 @@ def prepare(dsc_name, dsc_sha1, parts):
 
 def prepare_debian(dsc_name, dsc_sha1, files):
 	logging.debug('preparing Debian directory for %s', dsc_name)
+	readable_parts = 0
 	debian_tmp_dir = tempfile.mkdtemp(prefix='derivs-cmp-srcpkg-Debian-')
 	path = hash_path(snapshot_cache_dir, dsc_sha1)
+	if os.access(path, os.R_OK): readable_parts += 1
 	dsc_path = os.path.join(debian_tmp_dir, dsc_name)
 	os.symlink(path, dsc_path)
 	for file in files:
@@ -598,6 +599,11 @@ def prepare_debian(dsc_name, dsc_sha1, files):
 		path = hash_path(snapshot_cache_dir, part_sha1)
 		part_path = os.path.join(debian_tmp_dir, part_name)
 		os.symlink(path, part_path)
+		if os.access(path, os.R_OK): readable_parts += 1
+	if readable_parts != (1 + len(files)):
+		logging.info('only %s parts of %s are readable', readable_parts, dsc_name)
+		rmtree(debian_tmp_dir)
+		return None
 	return debian_tmp_dir
 
 def get_changelog_entries(tmp_dir, dsc_name, dsc_sha1):
@@ -949,11 +955,15 @@ def check_source_package(source_entry, srcpkg):
 						debian_dsc_sha1, debian_dsc_name, debian_parts = debian_info
 						logging.debug('Debian source package %s %s dsc found %s %s', debian_name, debian_version, debian_dsc_name, debian_dsc_sha1)
 						debian_tmp_dir = prepare_debian(debian_dsc_name, debian_dsc_sha1, debian_parts)
-						patch_created = create_patch(tmp_dir, dsc_name, dsc_sha1, debian_tmp_dir, debian_dsc_name, debian_dsc_sha1)
-						if patch_created:
-							patch_names = present_patch(name, version, dsc_sha1, debian_name, debian_version, debian_dsc_sha1)
-							if patch_names: patch = (debian_name, debian_version, debian_dsc_sha1, name, version, dsc_sha1, [part[0] for part in parts_modified], patch_names)
-						rmtree(debian_tmp_dir)
+						if debian_tmp_dir:
+							patch_created = create_patch(tmp_dir, dsc_name, dsc_sha1, debian_tmp_dir, debian_dsc_name, debian_dsc_sha1)
+							if patch_created:
+								patch_names = present_patch(name, version, dsc_sha1, debian_name, debian_version, debian_dsc_sha1)
+								if patch_names: patch = (debian_name, debian_version, debian_dsc_sha1, name, version, dsc_sha1, [part[0] for part in parts_modified], patch_names)
+							rmtree(debian_tmp_dir)
+						else:
+							# This could be an issue with snapshots or a file that is not distributable
+							logging.info('source package %s %s: could not create temporary dir for Debian: %s %s', name, version, debian_name, debian_version)
 					else:
 						logging.warning('source package %s %s: could not get Debian info for %s %s: %s', name, version, debian_name, debian_version, debian_info)
 				else:
