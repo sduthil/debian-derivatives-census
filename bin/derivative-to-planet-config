@@ -15,10 +15,12 @@ try: import Image
 except ImportError: pass
 from tempfile import NamedTemporaryFile as tempfile
 
+override = sys.argv[3] + '.override'
+override_dev = sys.argv[4] + '.override'
 name = sys.argv[1].strip()
 longname = sys.argv[2]
-blogs_rss = sys.argv[3]
-blogs_dev_rss = sys.argv[4]
+blogs_rss = override if os.path.exists(override) else sys.argv[3]
+blogs_dev_rss = override_dev if os.path.exists(override_dev) else sys.argv[4]
 head = sys.argv[5]
 config = sys.argv[6]
 
