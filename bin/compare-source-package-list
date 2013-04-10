@@ -614,10 +614,11 @@ def get_changelog_entries(tmp_dir, dsc_name, dsc_sha1):
 	if os.path.exists(changelog_path):
 		logging.debug('changelog cache exists for %s %s', dsc_name, dsc_sha1)
 		f = file(changelog_path)
-		changelog_entries = json.load(f)
-		changelog_entries = [tuple(entry) for entry in changelog_entries]
-		f.close()
-		return changelog_entries
+		if f:
+			try: changelog_entries = json.load(f)
+			except ValueError: pass
+			else: return [tuple(entry) for entry in changelog_entries]
+			finally: f.close()
 
 	# Preparation
 	extract_path = os.path.join(tmp_dir,'extracted')
@@ -669,6 +670,7 @@ def get_changelog_entries(tmp_dir, dsc_name, dsc_sha1):
 
 	# Write the cache
 	makedirs(hash_path_parent(sha1_changelog_dir, dsc_sha1))
+	remove(changelog_path)
 	f = file(changelog_path, 'w')
 	json.dump(changelog_entries, f)
 	f.close()
