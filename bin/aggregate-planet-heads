@@ -9,11 +9,11 @@
 # aggregate-planet-heads <derivatives> <heads directory>
 
 set -e
-eval heads="\$$#"
 while test $# -gt 1; do
     derivatives="$derivatives $1"
     shift
 done
+heads="$1"
 mkdir -p "$heads"
 for d in $derivatives ; do
 	if [ -d $d -a -s $d/status ] ; then
