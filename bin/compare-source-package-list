@@ -801,7 +801,7 @@ def create_patch(tmp_dir, dsc_name, dsc_sha1, debian_tmp_dir, debian_dsc_name, d
 	for path in path_everything, path_debian:
 		try:
 			if os.path.getsize(path) > 104857600:
-				logging.warning('patch between %s and %s is larger than 100MB', dsc_name, debian_dsc_name)
+				logging.info('patch between %s and %s is larger than 100MB', dsc_name, debian_dsc_name)
 				remove(path)
 				symlink(os.path.relpath(patch_too_large, os.path.dirname(path)), path)
 		except OSError:
