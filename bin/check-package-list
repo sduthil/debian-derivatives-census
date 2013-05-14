@@ -123,6 +123,24 @@ for item in acquire.items:
 			logging.warning('release %s: Release file missing Valid-Until, causing security issues', item.desc_uri)
 		if 'Architectures' not in release:
 			logging.warning('release %s: Release file missing Architectures', item.desc_uri)
+		if 'Suite' in release:
+			if len(release['Suite'].split()) != 1:
+				logging.warning('release %s: Optional header Suite does not contain single word value', item.desc_uri)
+		if 'Codename' in release:
+			if len(release['Codename'].split()) != 1:
+				logging.warning('release %s: Optional header Codename does not contain single word value', item.desc_uri)
+		if 'MD5sum' in release:
+			# Packages and Sources files use MD5sum, Release file uses MD5Sum
+			logging.warning('release %s: Release file incorrectly uses MD5sum header instead of MD5Sum', item.desc_uri)
+		if 'NotAutomatic' in release:
+			if release['NotAutomatic'].lower() != 'yes' and release['NotAutomatic'].lower() != 'no':
+				logging.warning('release %s: NotAutomatic header must have value of "yes" or "no"', item.desc_uri)
+		if 'ButAutomaticUpgrades' in release:
+			if release['ButAutomaticUpgrades'].lower() != 'yes' and release['ButAutomaticUpgrades'].lower() != 'no':
+				logging.warning('release %s: ButAutomaticUpgrades header must have value of "yes" or "no"', item.desc_uri)
+			if release['ButAutomaticUpgrades'].lower() == 'yes':
+				if 'NotAutomatic' in release and release['NotAutomatic'].lower() != 'yes':
+					logging.warning('release %s: Specifying "yes" for ButAutomaticUpgrades without specifying "yes" for NotAutomatic is invalid', item.desc_uri)
 		for header, value in release.items():
 			if header not in release_headers:
 				logging.warning('release %s: Unknown header %s', item.desc_uri, header)
