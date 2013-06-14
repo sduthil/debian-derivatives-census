@@ -9,4 +9,4 @@
 # get-planet-svn <svn dir>
 
 # svn co does svn up for existing stuff
-svn co --quiet svn://svn.debian.org/svn/planet-debian/trunk "$1"
+svn co --quiet svn://anonscm.debian.org/planet-debian/trunk "$1"
