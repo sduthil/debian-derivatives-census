@@ -37,7 +37,7 @@ def subprocess_setup():
 source_hash_types = {'MD5': ('Files', 32, 'md5sum'), 'SHA-1': ('Checksums-Sha1', 40, 'sha1'), 'SHA-256': ('Checksums-Sha256', 64, 'sha256')}
 binary_hash_types = {'MD5': ('MD5sum', 32), 'SHA-1': ('SHA1', 40), 'SHA-256': ('SHA256', 64)}
 release_hash_types = {'MD5': ('MD5Sum', 32, 'md5sum'), 'SHA-1': ('SHA1', 40, 'sha1'), 'SHA-256': ('SHA256', 64, 'sha256')}
-release_headers = ['Architectures','Codename','Suite','Components','Date','Valid-Until', 'Origin', 'Description', 'Label', 'Version','MD5Sum','SHA1','SHA256']
+release_headers = ['Architectures','Codename','Suite','Components','Date','Valid-Until', 'Origin', 'Description', 'Label', 'Version', 'NotAutomatic', 'ButAutomaticUpgrades', 'MD5Sum', 'SHA1', 'SHA256']
 archs = ['alpha', 'amd64', 'arm', 'armel', 'armhf', 'hppa', 'hurd-i386', 'i386', 'ia64', 'kfreebsd-amd64', 'kfreebsd-i386', 'mips', 'mipsel', 'powerpc', 's390', 's390x', 'sparc', 'avr32', 'm68k', 'powerpcspe', 'sh4', 'sparc64']
 
 # Init
