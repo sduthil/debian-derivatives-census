@@ -22,6 +22,7 @@ touch --reference "$apt" "$apt-local-timestamp" 2> /dev/null || true
 test -d "$apt/var/lib/dpkg" || mkdir --parents "$apt/var/lib/dpkg"
 test -d "$apt/etc/apt/apt.conf.d" || mkdir --parents "$apt/etc/apt/apt.conf.d"
 test -d "$apt/etc/apt/trusted.gpg.d" || mkdir --parents "$apt/etc/apt/trusted.gpg.d"
+test -d "$apt/etc/apt/preferences.d" || mkdir --parents "$apt/etc/apt/preferences.d"
 test -d "$apt/etc/apt/sources.list.d" || mkdir --parents "$apt/etc/apt/sources.list.d"
 test -d "$apt/var/lib/apt/lists/partial" || mkdir --parents "$apt/var/lib/apt/lists/partial"
 test -d "$apt/var/cache/apt/archives/partial" || mkdir --parents "$apt/var/cache/apt/archives/partial"
