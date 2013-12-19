@@ -132,7 +132,11 @@ for x in sources_list.list:
 
 for item in acquire.items:
 	if 'Release' in item.desc_uri and 'Release.gpg' not in item.desc_uri:
-		fn = item.destfile.replace('/partial/','/')
+		fn = item.destfile + '.reverify'
+		if not os.path.exists(fn):
+			fn = fn.replace('.reverify','')
+		if not os.path.exists(fn):
+			fn = fn.replace('/partial/','/')
 		if not os.path.exists(fn):
 			fn = fn.replace('InRelease','Release')
 		try: f = file(fn)
