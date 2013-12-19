@@ -3,6 +3,7 @@
 
 export PATH:=$(CURDIR)/bin:$(PATH)
 export CURLRC=$(CURDIR)/etc/curl.conf
+export APT_CONFIG=$(CURDIR)/etc/apt.conf
 
 .PHONY: var clean
 

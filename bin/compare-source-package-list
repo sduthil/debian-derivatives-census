@@ -126,15 +126,6 @@ ishex = lambda s: not(set(s)-set(string.hexdigits))
 # Init
 apt_pkg.init()
 
-# Setup configuration
-apt_pkg.config.set('Dir', os.path.abspath(sys.argv[2]))
-apt_pkg.config.set('Dir::Etc', os.path.abspath(sys.argv[2]))
-apt_pkg.config.set('Dir::State', os.path.abspath(sys.argv[2]))
-apt_pkg.config.set('Dir::Cache', os.path.abspath(sys.argv[2]))
-apt_pkg.config.set('Dir::State::status', os.path.abspath(os.path.join(sys.argv[2],'status')))
-apt_pkg.config.set('Dir::Etc::sourcelist', os.path.abspath(sys.argv[1]))
-apt_pkg.config.set('Dir::Bin::gpg', 'fakegpgv')
-
 # Preparation
 sources_list = apt_pkg.SourceList()
 sources_list.read_main_list()

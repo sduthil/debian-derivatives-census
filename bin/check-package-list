@@ -96,15 +96,6 @@ apt_pkg.init()
 remove(sys.argv[3])
 logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.DEBUG, filename=sys.argv[3])
 
-# Setup configuration
-apt_pkg.config.set('Dir', os.path.abspath(sys.argv[2]))
-apt_pkg.config.set('Dir::Etc', os.path.abspath(sys.argv[2]))
-apt_pkg.config.set('Dir::State', os.path.abspath(sys.argv[2]))
-apt_pkg.config.set('Dir::Cache', os.path.abspath(sys.argv[2]))
-apt_pkg.config.set('Dir::State::status', os.path.abspath(os.path.join(sys.argv[2],'status')))
-apt_pkg.config.set('Dir::Etc::sourcelist', os.path.abspath(sys.argv[1]))
-apt_pkg.config.set('Dir::Bin::gpg', 'fakegpgv')
-
 # Preparation
 acquire = apt_pkg.Acquire()
 sources_list = apt_pkg.SourceList()
@@ -236,7 +227,7 @@ for source in source_entries:
 
 for binary in binary_entries:
 	for b in binary:
-		fn = os.path.join(lists_dir, b.describe.rstrip(')').rpartition('(')[2])
+		fn = b.describe.rstrip(')').rpartition('(')[2]
 		try: f = file(fn)
 		except IOError:
 			logging.warning('missing Packages file %s', fn)

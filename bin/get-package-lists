@@ -9,34 +9,33 @@
 # get-package-lists <sources.list> <apt dir>
 
 set -e
-test -f "$1" || exit 0
-apt="$(readlink -m "$2")"
+sources_list="$1"
+apt="$2"
+
+# Need a sources.list file
+test -f "$sources_list" || exit 0
 
 # Save the local timestamp
 touch --reference "$apt" "$apt-local-timestamp" 2> /dev/null || true
 
 # Create needed files and directories
-test -d "$apt/trusted.gpg.d" || mkdir --parents "$apt/trusted.gpg.d"
-test -d "$apt/sources.list.d" || mkdir --parents "$apt/sources.list.d"
-test -f "$apt/status" || touch "$apt/status"
-test -f "$apt/trusted.gpg" || touch "$apt/trusted.gpg"
+test -d "$apt/var/lib/dpkg" || mkdir --parents "$apt/var/lib/dpkg"
+test -d "$apt/etc/apt/apt.conf.d" || mkdir --parents "$apt/etc/apt/apt.conf.d"
+test -d "$apt/etc/apt/trusted.gpg.d" || mkdir --parents "$apt/etc/apt/trusted.gpg.d"
+test -d "$apt/etc/apt/sources.list.d" || mkdir --parents "$apt/etc/apt/sources.list.d"
+test -d "$apt/var/lib/apt/lists/partial" || mkdir --parents "$apt/var/lib/apt/lists/partial"
+test -d "$apt/var/cache/apt/archives/partial" || mkdir --parents "$apt/var/cache/apt/archives/partial"
+test -f "$apt/var/lib/dpkg/status" || touch "$apt/var/lib/dpkg/status"
+test -f "$apt/etc/apt/trusted.gpg" || touch "$apt/etc/apt/trusted.gpg"
 
 # Update the apt metadata
-apt-get update -q=2 -y \
-	-o Acquire::http::User-Agent="Debian Derivatives Census QA bot" \
-	-o Dir="$apt" \
-	-o Dir::Etc="$apt" \
-	-o Dir::State="$apt" \
-	-o Dir::Cache="$apt" \
-	-o Dir::State::status="$apt/status" \
-	-o Dir::Etc::sourcelist="$(readlink -m "$1")" \
-	-o Dir::Bin::gpg=fakegpgv || true
+apt-get update -q=2 -y
 
 # Fix the timestamp on the apt dir
 # apt always updates the cache files :(
 
 # Try the Release files first
-for release in $(find "$apt/lists" -name "*Release" ! -name "Release.gpg") ; do
+for release in $(find "$apt/var/lib/apt/lists" -name "*Release" ! -name "Release.gpg") ; do
 	timestamp="$(grep '^Date: ' "$release" | sed 's/^Date: //')"
 	if [ ! -z "$timestamp" ] ; then
 		touch --date "$timestamp" "$apt-tmp-remote-timestamp" 2> /dev/null || timestamp=broken
@@ -56,7 +55,7 @@ done
 if [ -f "$apt-new-remote-timestamp" ] ; then
 	newest="$apt-new-remote-timestamp"
 else
-	newest="$apt/lists/$(ls -t "$apt/lists" | grep -vE '^(lock|partial)$' | head -n1)"
+	newest="$apt/var/lib/apt/lists/$(ls -t "$apt/var/lib/apt/lists" | grep -vE '^(lock|partial)$' | head -n1)"
 fi
 
 # If one of the lists files is newer than the saved timestamp
