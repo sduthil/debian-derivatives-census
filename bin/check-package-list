@@ -177,9 +177,6 @@ for item in acquire.items:
 		if 'Codename' in release:
 			if len(release['Codename'].split()) != 1:
 				logging.warning('release %s: Optional header Codename does not contain single word value', item.desc_uri)
-		if 'MD5sum' in release:
-			# Packages and Sources files use MD5sum, Release file uses MD5Sum
-			logging.warning('release %s: Release file incorrectly uses MD5sum header instead of MD5Sum', item.desc_uri)
 		if 'NotAutomatic' in release:
 			if release['NotAutomatic'].lower() != 'yes' and release['NotAutomatic'].lower() != 'no':
 				logging.warning('release %s: NotAutomatic header must have value of "yes" or "no"', item.desc_uri)
