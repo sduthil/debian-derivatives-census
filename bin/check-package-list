@@ -17,6 +17,8 @@ import apt_pkg
 import logging
 import subprocess
 import signal
+import email.utils
+import time
 
 def remove(file):
 	try: os.remove(file)
@@ -167,8 +169,29 @@ for item in acquire.items:
 			logging.warning('release %s: Release file claims Label is Debian', item.desc_uri)
 		if 'Date' not in release:
 			logging.warning('release %s: Release file missing Date', item.desc_uri)
+			date = None
+		else:
+			date = email.utils.parsedate_tz(release['Date'])
+			if date:
+				date = email.utils.mktime_tz(date)
+			else:
+				logging.warning('release %s: Release file Date is invalid', item.desc_uri)
 		if 'Valid-Until' not in release:
 			logging.warning('release %s: Release file missing Valid-Until, causing security issues', item.desc_uri)
+			valid_until = None
+		else:
+			valid_until = email.utils.parsedate_tz(release['Valid-Until'])
+			if valid_until:
+				valid_until = email.utils.mktime_tz(valid_until)
+			else:
+				logging.warning('release %s: Release file Valid-Until is invalid', item.desc_uri)
+		now = time.time()
+		if date and date > now:
+			logging.warning('release %s: Release file Date is after now', item.desc_uri)
+		if valid_until and valid_until < now:
+			logging.warning('release %s: Release file Valid-Until is before now', item.desc_uri)
+		if date and valid_until and date > valid_until:
+			logging.warning('release %s: Release file Date is after Valid-Until', item.desc_uri)
 		if 'Architectures' not in release:
 			logging.warning('release %s: Release file missing Architectures', item.desc_uri)
 		if 'Suite' in release:
