@@ -177,6 +177,8 @@ for item in acquire.items:
 			logging.warning('release %s: Release file missing Label', item.desc_uri)
 		elif release['Label'] == 'Debian':
 			logging.warning('release %s: Release file claims Label is Debian', item.desc_uri)
+		if 'Description' not in release:
+			logging.warning('release %s: Release file missing Description', item.desc_uri)
 		if 'Date' not in release:
 			logging.warning('release %s: Release file missing Date', item.desc_uri)
 			date = None
