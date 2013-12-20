@@ -56,9 +56,12 @@ release_hash_types = {
 }
 release_headers = [
 	'Architectures',
+	'Architecture',
+	'Archive',
 	'Codename',
 	'Suite',
 	'Components',
+	'Component',
 	'Date',
 	'Valid-Until',
 	'Origin',
@@ -206,6 +209,10 @@ for item in acquire.items:
 			logging.warning('release %s: Release file Date is after Valid-Until', item.desc_uri)
 		if 'Architectures' not in release:
 			logging.warning('release %s: Release file missing Architectures', item.desc_uri)
+		if 'Architecture' in release:
+			logging.warning('release %s: Release file incorrectly uses Architecture header instead of Architectures', item.desc_uri)
+		if 'Component' in release:
+			logging.warning('release %s: Release file incorrectly uses Component header instead of Components', item.desc_uri)
 		if 'Suite' in release:
 			if len(release['Suite'].split()) != 1:
 				logging.warning('release %s: Optional header Suite does not contain single word value', item.desc_uri)
