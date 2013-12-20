@@ -40,16 +40,19 @@ source_hash_types = {
 	'MD5': ('Files', 32, 'md5sum'),
 	'SHA-1': ('Checksums-Sha1', 40, 'sha1'),
 	'SHA-256': ('Checksums-Sha256', 64, 'sha256'),
+	'SHA-512': ('Checksums-Sha512', 128, 'sha512'),
 }
 binary_hash_types = {
 	'MD5': ('MD5sum', 32),
 	'SHA-1': ('SHA1', 40),
 	'SHA-256': ('SHA256', 64),
+	'SHA-512': ('SHA512', 128),
 }
 release_hash_types = {
 	'MD5': ('MD5Sum', 32, 'md5sum'),
 	'SHA-1': ('SHA1', 40, 'sha1'),
 	'SHA-256': ('SHA256', 64, 'sha256'),
+	'SHA-512': ('SHA512', 128, 'sha512'),
 }
 release_headers = [
 	'Architectures',
@@ -67,6 +70,7 @@ release_headers = [
 	'MD5Sum',
 	'SHA1',
 	'SHA256',
+	'SHA512',
 ]
 archs = [
 	'alpha',
@@ -92,6 +96,12 @@ archs = [
 	'sh4',
 	'sparc64',
 ]
+
+# Hack to add sha512 support (http://bugs.debian.org/732599)
+if 'sha512' not in debian.deb822.Release._multivalued_fields:
+	debian.deb822.Release._multivalued_fields['sha512'] = ['sha512', 'size', 'name']
+if 'checksums-sha512' not in debian.deb822.Sources._multivalued_fields:
+	debian.deb822.Sources._multivalued_fields['checksums-sha512'] = ['sha512', 'size', 'name']
 
 # Init
 apt_pkg.init()
@@ -152,7 +162,7 @@ for item in acquire.items:
 		release = debian.deb822.Release(f)
 		for type, (header, size, short_type) in release_hash_types.items():
 			if header not in release:
-				logging.warning('release %s: no %s hash', item.desc_uri, type)
+				if header != 'SHA512': logging.warning('release %s: no %s hash', item.desc_uri, type)
 				continue
 			for x in release[header]:
 				if len(x[short_type]) != size:
@@ -233,7 +243,7 @@ for source in source_entries:
 				logging.info('no binary packages for source package %s %s', name, version)
 			for type, (header, size, short_type) in source_hash_types.items():
 				if header not in srcpkg:
-					logging.warning('source %s %s: no %s hash', name, version, type)
+					if header != 'Checksums-Sha512': logging.warning('source %s %s: no %s hash', name, version, type)
 					continue
 				for x in srcpkg[header]:
 					if len(x[short_type]) != size:
@@ -274,7 +284,7 @@ for binary in binary_entries:
 			packages_source_packages.append((source_name, source_version))
 			for type, (header, size) in binary_hash_types.items():
 				if header not in binpkg:
-					logging.warning('binary %s %s: no %s hash', name, version, type)
+					if header != 'SHA512': logging.warning('binary %s %s: no %s hash', name, version, type)
 					continue
 				if len(binpkg[header]) != size:
 					logging.warning('binary %s %s: %s hash has unexpected size %s instead of %s', name, version, type, len(binpkg[header]), size)
