@@ -24,7 +24,7 @@ sources_patches_pts = sys.argv[-1]
 # Load the old information about patched versions
 try:
 	f = open(sources_patches)
-	old_patches = yaml.load(f)
+	old_patches = yaml.safe_load(f)
 	f.close()
 except IOError:
 	old_patches = []
@@ -37,7 +37,7 @@ for deriv in derivatives:
 	# their files may go missing at any time.
 	try:
 		f = open(os.path.join(deriv,'sources.patches'))
-		data = yaml.load(f)
+		data = yaml.safe_load(f)
 		f.close()
 	except IOError:
 		continue

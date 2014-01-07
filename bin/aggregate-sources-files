@@ -18,7 +18,7 @@ sources_files = sys.argv[-1]
 
 try:
 	f = open(sources_files)
-	files = yaml.load(f)
+	files = yaml.safe_load(f)
 	f.close()
 except IOError:
 	files = {}
@@ -30,7 +30,7 @@ for deriv in derivatives:
 	# their files may go missing at any time.
 	try:
 		f = open(os.path.join(deriv,'sources.files'))
-		data = yaml.load(f)
+		data = yaml.safe_load(f)
 		f.close()
 	except IOError:
 		continue
