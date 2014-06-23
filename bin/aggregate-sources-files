@@ -50,5 +50,5 @@ for sha1 in set(files)-set(new_files):
 	files[sha1]['obsolete'] = True
 
 f = open(sources_files,'wb')
-yaml.dump(files, f)
+yaml.safe_dump(files, f)
 f.close()

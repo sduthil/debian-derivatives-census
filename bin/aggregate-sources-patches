@@ -63,10 +63,10 @@ patches = old_patches + new_patches
 debian_names = set([patch['debian_name'] for patch in patches if not patch.get('obsolete', False) and patch['deriv'] != 'Ubuntu'])
 patches_pts = dict((name, '/'.join((url,shortslug(name),name,''))) for name in debian_names)
 f = open(sources_patches_pts,'wb')
-yaml.dump(patches_pts, f)
+yaml.safe_dump(patches_pts, f)
 f.close()
 
 # The general patch metadata
 f = open(sources_patches,'wb')
-yaml.dump(patches, f)
+yaml.safe_dump(patches, f)
 f.close()
