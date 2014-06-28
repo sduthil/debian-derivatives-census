@@ -184,14 +184,14 @@ def global_patch_path(name, version, debian_name, debian_version, type=None):
 # Functions for munging source packages
 
 def convert_lzip_to_gzip(dir, name):
-	cmdline = ['lzip', '-d', name]
+	cmdline = ['lzip', '-d', '--', name]
 	process = subprocess.Popen(cmdline, cwd=dir, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, preexec_fn=subprocess_setup)
 	output = process.communicate()[0]
 	if process.returncode:
 		logging.warning('lzip reported failure to decompress %s:', name)
 		logging.warning(output)
 	bname = name[0:-3] # Strip off .lz
-	cmdline = ['gzip', '-1', bname] # gzip -1 to reduce overhead
+	cmdline = ['gzip', '-1', '--', bname] # gzip -1 to reduce overhead
 	process = subprocess.Popen(cmdline, cwd=dir, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, preexec_fn=subprocess_setup)
 	output = process.communicate()[0]
 	if process.returncode:
