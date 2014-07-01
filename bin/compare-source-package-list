@@ -70,7 +70,7 @@ import yaml
 from debian import deb822, changelog
 import apt_pkg
 import psycopg2
-try: import cjson as json
+try: import simplejson as json
 except ImportError: import json
 
 # Helper functions for python stuff with annoying error handling
