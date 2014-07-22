@@ -993,7 +993,7 @@ def process_sources(source_entries, lists_dir):
 					action_files, action_patch, action_link, action_new = actions
 					if action_files:
 						files.append(action_files)
-						logging.debug('action: return files %s', ' '.join([' '.join(action) for action in action_files]))
+						logging.debug('action: return files %s', ' '.join([' '.join([str(item) for item in action]) for action in action_files]))
 					if action_patch:
 						patches.append(action_patch)
 						logging.debug('action: return patches %s', ' '.join([' '.join(action) for action in action_patch]))
