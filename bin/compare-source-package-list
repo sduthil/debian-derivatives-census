@@ -646,7 +646,11 @@ def get_changelog_entries(tmp_dir, dsc_name, dsc_sha1):
 	# Find out which source package is the most likely derivative
 	logging.debug('parsing changelog for %s', dsc_name)
 	changelog_file = open(changelog_filename)
-	changelog_obj = changelog.Changelog(changelog_file)
+	try:
+		changelog_obj = changelog.Changelog(changelog_file)
+	except UnicodeDecodeError:
+		changelog_file.seek(0)
+		changelog_obj = changelog.Changelog(changelog_file, encoding='iso-8859-1')
 	try:
 		changelog_entries = [(entry.package, str(entry._raw_version)) for entry in changelog_obj]
 	except:
