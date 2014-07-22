@@ -333,6 +333,9 @@ def check_hash_cache(dir, hash, hash_type, url):
 	elif hash_path_exists(sha1_cache_dir, sha1):
 		logging.debug('exists in derivatives sha1 cache: %s', sha1)
 		return (False, sha1)
+	else:
+		logging.debug('missing in derivatives sha1 cache: %s', sha1)
+		return download_and_check_hash(url, dir, hash, hash_type)
 
 def check_sha1_cache(sha1, url):
 	logging.debug('checking sha1 caches: %s', sha1)
