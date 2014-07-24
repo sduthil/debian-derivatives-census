@@ -1,0 +1,14 @@
+#!/bin/bash
+# This script can be run on any machine, currently run on alioth
+
+(
+flock -n 666 || exit 0
+
+set -e
+umask 0002
+make -j3 -s -i
+git fetch -q
+git status -s
+git --no-pager log --branches --not --remotes --simplify-by-decoration --decorate --oneline
+
+) 666>var/lock
