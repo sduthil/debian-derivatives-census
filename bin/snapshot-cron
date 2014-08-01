@@ -22,4 +22,4 @@ git --no-pager log --branches --not --remotes --simplify-by-decoration --decorat
 git diff HEAD
 crontab etc/snapshot.crontab
 
-) 666>~/derivaticves-census-lock
+) 666>~/derivatives-census-lock
