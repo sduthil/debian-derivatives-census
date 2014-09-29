@@ -24,11 +24,11 @@ ALL = \
 	blogs-dev-rss \
 	planet-config \
 	planet-head \
-	debtags \
 	distrowatch \
 	check-package-list \
 	check-sources-list \
-	check
+	check \
+	cleanup
 
 all: $(ALL)
 
@@ -104,9 +104,6 @@ planet-config: name blogs-rss blogs-dev-rss planet-head
 planet-head: logo-img
 	logo-to-planet-head $^ $@
 
-debtags: name sources.list
-	derivative-to-debtags $(notdir $(CURDIR)) $^ apt $@
-
 distrowatch: wiki.txt
 	wiki-text-to-distrowatch $^ $@
 
@@ -117,3 +114,6 @@ check-package-list: sources.list apt
 
 check-sources-list: sources.list
 	check-sources-list $^ $@
+
+cleanup:
+	rm -f debtags

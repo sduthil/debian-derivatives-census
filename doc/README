@@ -68,13 +68,11 @@ These create configuration snippets for Debian infrastructure:
 
 derivative-to-planet-config
 derivative-to-planet-head
-derivative-to-debtags
 
 These aggregate configuration for Debian infrastructure:
 
 aggregate-planet-config
 aggregate-planet-heads
-aggregate-debtags
 
 These check the derivatives for potential issues:
 
@@ -117,7 +115,6 @@ FOOTER.html: a symlink to a footer for visitors via HTTP
 .htaccess: sets some parameters for Apache
 census.html: the HTML version of the census wiki page
 derivatives: a list of names of derivative wiki pages
-debtags: list of Packages/Sources URLs for debtags.d.n
 distrowatch: distrowatch download statistics
 planet-config.ini: config file for Planet Debian derivatives
 heads/: small logos for Planet Debian derivatives
@@ -154,7 +151,6 @@ These are stored in the derivative dirs and are configuration snippets:
 
 HEADER.html: a symlink to documentation for visitors via HTTP
 .htaccess: sets some parameters for Apache
-debtags: snippets for use by debtags.debian.net
 
 These are stored in the derivative dirs and are problem reports:
 

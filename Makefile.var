@@ -21,11 +21,11 @@ ALL = \
 	planet-heads \
 	compare-planet-config \
 	compare-planet-heads \
-	debtags \
 	distrowatch \
 	sources.files \
 	sources.patches \
-	template.txt
+	template.txt \
+	cleanup
 
 all: $(ALL)
 
@@ -90,9 +90,6 @@ compare-planet-config: planet-svn planet-config
 compare-planet-heads: planet-svn planet-heads
 	compare-planet-heads $^
 
-debtags: derivatives distrowatch $(derivatives)
-	aggregate-debtags $< distrowatch $@
-
 sources.files: $(derivatives)
 	aggregate-sources-files $^ $@
 
@@ -101,3 +98,6 @@ sources.patches: $(derivatives)
 
 distrowatch: FORCE
 	get-distrowatch-stats $@
+
+cleanup:
+	rm -f debtags
