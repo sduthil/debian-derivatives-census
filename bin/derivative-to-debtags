@@ -21,6 +21,10 @@ class Debtags(debian.deb822._multivalued):
 		'sources': ['url'],
 	}
 
+# Check if input is available
+if not os.path.isdir(sys.argv[4]):
+	sys.exit(0)
+
 # Init
 apt_pkg.init()
 
