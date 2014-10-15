@@ -107,7 +107,7 @@ if 'checksums-sha512' not in debian.deb822.Sources._multivalued_fields:
 	debian.deb822.Sources._multivalued_fields['checksums-sha512'] = ['sha512', 'size', 'name']
 
 # Check if input is available
-if not os.path.isdir(sys.argv[4]):
+if not os.path.isdir(sys.argv[2]):
 	sys.exit(0)
 
 # Init
