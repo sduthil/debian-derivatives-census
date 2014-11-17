@@ -1079,6 +1079,7 @@ def process_sources(source_entries, lists_dir):
 	new = []
 	for source in source_entries:
 		for source_entry in source:
+			logging.debug('processing sources.list entry %s', source_entry.describe)
 			fn = os.path.join(lists_dir, source_entry.describe.rstrip(')').rpartition('(')[2])
 			try: f = file(fn)
 			except IOError: continue
