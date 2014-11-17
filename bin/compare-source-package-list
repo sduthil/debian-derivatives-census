@@ -1013,6 +1013,15 @@ def check_source_package(source_entry, srcpkg):
 				logging.debug('source package %s %s derived from %s %s', name, version, debian_name, debian_version)
 				debian_files = srcpkg_to_files(debian_name, debian_version)
 				if debian_files:
+					debian_files_unreadable = []
+					for debian_sha1, debian_name in debian_files:
+						debian_path = hash_path(snapshot_cache_dir, debian_sha1)
+						if not os.access(debian_path, os.R_OK):
+							debian_files_unreadable.append(debian_name)
+					if debian_files_unreadable:
+						logging.warning('finished processing source package %s %s: unreadable Debian files: %s', name, version, ' '.join(debian_files_unreadable))
+						rmtree(tmp_dir)
+						return (files, None, None, None)
 					debian_info = get_debian_info(debian_files)
 					if debian_info:
 						debian_dsc_sha1, debian_dsc_name, debian_parts = debian_info
