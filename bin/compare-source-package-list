@@ -182,14 +182,6 @@ def uncompressed_size(filename):
 			uc_size = struct.unpack('<Q', data)[0]
 	return max(file_size, uc_size)
 
-def total_uncompressed_size(parts):
-	size = 0
-	for part in parts:
-		path = part_hash_path(part)
-		if not path: continue
-		size += uncompressed_size(path)
-	return size
-
 def tmp_space():
 	stats = os.statvfs(tempfile.gettempdir())
 	return stats.f_frsize*stats.f_bavail
@@ -627,16 +619,24 @@ def srcpkg_to_derived_from(name, version):
 # Add symlinks for all needed files
 def prepare(dsc_name, dsc_sha1, parts):
 	logging.debug('preparing deriv directory for %s', dsc_name)
+	size = 0
+	unreadable_parts = []
 	tmp_dir = tempfile.mkdtemp(prefix='derivs-cmp-srcpkg-%s-' % derivative_short_name)
 	path = snapshot_hash_path(dsc_sha1)
 	if not os.path.exists(path): path = hash_path(sha1_cache_dir, dsc_sha1)
-	path = hash_path(sha1_cache_dir, dsc_sha1)
+	if not os.access(path, os.R_OK): unreadable_parts.append(dsc_name)
+	# The dsc data does not end up in the tmp dir, don't add the size here
 	dsc_path = os.path.join(tmp_dir, dsc_name)
 	os.symlink(path, dsc_path)
 	converted_parts = []
 	for part in parts:
 		path = part_hash_path(part)
 		if not path: continue
+		if not os.access(path, os.R_OK):
+			unreadable_parts.append(part['name'])
+			continue
+		else:
+			size += uncompressed_size(path)
 		part_path = os.path.join(tmp_dir, part['name'])
 		os.symlink(path, part_path)
 		# Some distributions allow additional compression schemes
@@ -646,24 +646,43 @@ def prepare(dsc_name, dsc_sha1, parts):
 	# Update the dsc file if we recompressed any files
 	if converted_parts:
 		update_dsc_file(tmp_dir, dsc_name, converted_parts)
-	return tmp_dir
+	if unreadable_parts:
+		logging.warning('some parts of %s are unreadable: %s', dsc_name, ' '.join(unreadable_parts))
+		rmtree(debian_tmp_dir)
+		return (None, size)
+	space = tmp_space()
+	if size > space:
+		logging.warning('not enough space for temporary files: %s > %s', name, version, size, space)
+		rmtree(tmp_dir)
+		return (None, size)
+	return (tmp_dir, size)
 
-def prepare_debian(dsc_name, dsc_sha1, files):
+def prepare_debian(dsc_name, dsc_sha1, files, size):
 	logging.debug('preparing Debian directory for %s', dsc_name)
-	readable_parts = 0
+	unreadable_parts = []
 	debian_tmp_dir = tempfile.mkdtemp(prefix='derivs-cmp-srcpkg-Debian-')
 	path = snapshot_hash_path(dsc_sha1)
-	if os.access(path, os.R_OK): readable_parts += 1
+	if not os.access(path, os.R_OK): unreadable_parts.append(dsc_name)
+	# The dsc data does not end up in the tmp dir, don't add the size here
 	dsc_path = os.path.join(debian_tmp_dir, dsc_name)
 	os.symlink(path, dsc_path)
 	for file in files:
 		part_name, part_sha1 = file
 		path = snapshot_hash_path(part_sha1)
+		if not os.access(path, os.R_OK):
+			unreadable_parts.append(part_name)
+			continue
+		else:
+			size += uncompressed_size(path)
 		part_path = os.path.join(debian_tmp_dir, part_name)
 		os.symlink(path, part_path)
-		if os.access(path, os.R_OK): readable_parts += 1
-	if readable_parts != (1 + len(files)):
-		logging.info('only %s parts of %s are readable', readable_parts, dsc_name)
+	if unreadable_parts:
+		logging.warning('some parts of %s are unreadable: %s', dsc_name, ' '.join(unreadable_parts))
+		rmtree(debian_tmp_dir)
+		return None
+	space = tmp_space()
+	if size > space:
+		logging.warning('not enough space for all temporary files: %s > %s', name, version, size, space)
 		rmtree(debian_tmp_dir)
 		return None
 	return debian_tmp_dir
@@ -1012,11 +1031,10 @@ def check_source_package(source_entry, srcpkg):
 			new = None
 			link = None
 			patch = None
-			size = total_uncompressed_size(parts)
-			if size > tmp_space():
-				logging.warning('finished processing source package %s %s: not enough space for temporary files: changelog extraction', name, version)
+			tmp_dir, size = prepare(dsc_name, dsc_sha1, parts)
+			if not tmp_dir:
+				logging.warning('source package %s %s: could not create temporary dir for deriv: %s', name, version, dsc_name)
 				return (files, None, None, None)
-			tmp_dir = prepare(dsc_name, dsc_sha1, parts)
 			derived_from = find_derived_from(tmp_dir, name, version, dsc_name, dsc_sha1, parts_unmodified)
 			if derived_from:
 				debian_name, debian_version = derived_from
@@ -1024,25 +1042,11 @@ def check_source_package(source_entry, srcpkg):
 				logging.debug('source package %s %s derived from %s %s', name, version, debian_name, debian_version)
 				debian_files = srcpkg_to_files(debian_name, debian_version)
 				if debian_files:
-					debian_files_unreadable = []
-					for debian_sha1, debian_name in debian_files:
-						debian_path = snapshot_hash_path(debian_sha1)
-						if not os.access(debian_path, os.R_OK):
-							debian_files_unreadable.append(debian_name)
-					if debian_files_unreadable:
-						logging.warning('finished processing source package %s %s: unreadable Debian files: %s', name, version, ' '.join(debian_files_unreadable))
-						rmtree(tmp_dir)
-						return (files, None, None, None)
 					debian_info = get_debian_info(debian_files)
 					if debian_info:
 						debian_dsc_sha1, debian_dsc_name, debian_parts = debian_info
 						logging.debug('Debian source package %s %s dsc found %s %s', debian_name, debian_version, debian_dsc_name, debian_dsc_sha1)
-						size += total_uncompressed_size(debian_parts)
-						if size > tmp_space():
-							logging.warning('finished processing source package %s %s: not enough space for temporary files: diffing', name, version)
-							rmtree(tmp_dir)
-							return (files, None, None, None)
-						debian_tmp_dir = prepare_debian(debian_dsc_name, debian_dsc_sha1, debian_parts)
+						debian_tmp_dir = prepare_debian(debian_dsc_name, debian_dsc_sha1, debian_parts, size)
 						if debian_tmp_dir:
 							patch_created = create_patch(tmp_dir, dsc_name, dsc_sha1, debian_tmp_dir, debian_dsc_name, debian_dsc_sha1)
 							if patch_created:
@@ -1053,8 +1057,8 @@ def check_source_package(source_entry, srcpkg):
 									logging.debug('patch between %s %s and %s %s is probably not useful', debian_name, debian_version, name, version)
 							rmtree(debian_tmp_dir)
 						else:
-							# This could be an issue with snapshots or a file that is not distributable
-							logging.info('source package %s %s: could not create temporary dir for Debian: %s %s', name, version, debian_name, debian_version)
+							# This could be an issue with disk space, snapshots or a file that is not distributable
+							logging.warning('source package %s %s: could not create temporary dir for Debian: %s %s', name, version, debian_name, debian_version)
 					else:
 						logging.warning('source package %s %s: could not get Debian info for %s %s: %s', name, version, debian_name, debian_version, debian_info)
 				else:
