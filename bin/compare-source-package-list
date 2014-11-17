@@ -185,12 +185,8 @@ def uncompressed_size(filename):
 def total_uncompressed_size(parts):
 	size = 0
 	for part in parts:
-		if 'sha1' in part:
-			path = hash_path(snapshot_cache_dir, part['sha1'])
-			if not os.path.exists(path): path = hash_path(sha1_cache_dir, part['sha1'])
-		elif 'sha256' in part: path = hash_path(sha256_cache_dir, part['sha256'])
-		elif 'md5sum' in part: path = hash_path(md5_cache_dir, part['md5sum'])
-		else: continue
+		path = part_hash_path(part)
+		if not path: continue
 		size += uncompressed_size(path)
 	return size
 
@@ -208,6 +204,24 @@ def hash_path(dir, hash):
 
 def hash_path_exists(dir, hash):
 	return os.path.exists(os.path.join(dir, hash[0:2], hash[2:4], hash))
+
+def snapshot_hash_path(hash):
+	return hash_path(snapshot_cache_dir, hash)
+
+def snapshot_hash_path_exists(hash):
+	return hash_path_exists(snapshot_cache_dir, hash)
+
+def part_hash_path(part):
+	if 'sha1' in part:
+		path = snapshot_hash_path(part['sha1'])
+		if not os.path.exists(path): path = hash_path(sha1_cache_dir, part['sha1'])
+		return path
+	elif 'sha256' in part:
+		return hash_path(sha256_cache_dir, part['sha256'])
+	elif 'md5sum' in part:
+		return hash_path(md5_cache_dir, part['md5sum'])
+	else:
+		return None
 
 def sha1_patch_path(debian_dsc_sha1, dsc_sha1, type=None):
 	path = os.path.join(hash_path(sha1_patch_dir, debian_dsc_sha1), hash_path('', dsc_sha1))
@@ -307,8 +321,8 @@ def download_and_check_hash(url, dir, hash, hash_type):
 		sha1_path = hash_path(sha1_cache_dir, sha1)
 		sha1_parent = hash_path_parent(sha1_cache_dir, sha1)
 		makedirs(sha1_parent)
-		if hash_path_exists(snapshot_cache_dir, sha1):
-			snapshot_path = hash_path(snapshot_cache_dir, sha1)
+		snapshot_path = snapshot_hash_path(sha1)
+		if os.path.exists(snapshot_path):
 			symlink(snapshot_path, path)
 			logging.debug('exists in snapshot sha1 cache: %s %s %s %s', hash_type, hash, sha1, url)
 			return (True, sha1)
@@ -383,7 +397,7 @@ def check_hash_cache(dir, hash, hash_type, url):
 		return download_and_check_hash(url, dir, hash, hash_type)
 	logging.debug('exists in hash cache: %s %s', hash_type, hash)
 	sha1 = os.path.basename(path)
-	if hash_path_exists(snapshot_cache_dir, sha1):
+	if snapshot_hash_path_exists(sha1):
 		logging.debug('exists in snapshot sha1 cache: %s', sha1)
 		remove(hash_path(sha1_cache_dir,sha1))
 		return (True, sha1)
@@ -396,7 +410,7 @@ def check_hash_cache(dir, hash, hash_type, url):
 
 def check_sha1_cache(sha1, url):
 	logging.debug('checking sha1 caches: %s', sha1)
-	if hash_path_exists(snapshot_cache_dir, sha1):
+	if snapshot_hash_path_exists(sha1):
 		logging.debug('exists in snapshot sha1 cache: %s', sha1)
 		remove(hash_path(sha1_cache_dir,sha1))
 		return (True, sha1)
@@ -614,18 +628,15 @@ def srcpkg_to_derived_from(name, version):
 def prepare(dsc_name, dsc_sha1, parts):
 	logging.debug('preparing deriv directory for %s', dsc_name)
 	tmp_dir = tempfile.mkdtemp(prefix='derivs-cmp-srcpkg-%s-' % derivative_short_name)
-	path = hash_path(snapshot_cache_dir, dsc_sha1)
+	path = snapshot_hash_path(dsc_sha1)
 	if not os.path.exists(path): path = hash_path(sha1_cache_dir, dsc_sha1)
 	path = hash_path(sha1_cache_dir, dsc_sha1)
 	dsc_path = os.path.join(tmp_dir, dsc_name)
 	os.symlink(path, dsc_path)
 	converted_parts = []
 	for part in parts:
-		if 'sha1' in part:
-			path = hash_path(snapshot_cache_dir, part['sha1'])
-			if not os.path.exists(path): path = hash_path(sha1_cache_dir, part['sha1'])
-		elif 'sha256' in part: path = hash_path(sha256_cache_dir, part['sha256'])
-		elif 'md5sum' in part: path = hash_path(md5_cache_dir, part['md5sum'])
+		path = part_hash_path(part)
+		if not path: continue
 		part_path = os.path.join(tmp_dir, part['name'])
 		os.symlink(path, part_path)
 		# Some distributions allow additional compression schemes
@@ -641,13 +652,13 @@ def prepare_debian(dsc_name, dsc_sha1, files):
 	logging.debug('preparing Debian directory for %s', dsc_name)
 	readable_parts = 0
 	debian_tmp_dir = tempfile.mkdtemp(prefix='derivs-cmp-srcpkg-Debian-')
-	path = hash_path(snapshot_cache_dir, dsc_sha1)
+	path = snapshot_hash_path(dsc_sha1)
 	if os.access(path, os.R_OK): readable_parts += 1
 	dsc_path = os.path.join(debian_tmp_dir, dsc_name)
 	os.symlink(path, dsc_path)
 	for file in files:
 		part_name, part_sha1 = file
-		path = hash_path(snapshot_cache_dir, part_sha1)
+		path = snapshot_hash_path(part_sha1)
 		part_path = os.path.join(debian_tmp_dir, part_name)
 		os.symlink(path, part_path)
 		if os.access(path, os.R_OK): readable_parts += 1
@@ -1015,7 +1026,7 @@ def check_source_package(source_entry, srcpkg):
 				if debian_files:
 					debian_files_unreadable = []
 					for debian_sha1, debian_name in debian_files:
-						debian_path = hash_path(snapshot_cache_dir, debian_sha1)
+						debian_path = snapshot_hash_path(debian_sha1)
 						if not os.access(debian_path, os.R_OK):
 							debian_files_unreadable.append(debian_name)
 					if debian_files_unreadable:
