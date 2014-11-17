@@ -648,7 +648,7 @@ def prepare(dsc_name, dsc_sha1, parts):
 		update_dsc_file(tmp_dir, dsc_name, converted_parts)
 	if unreadable_parts:
 		logging.warning('some parts of %s are unreadable: %s', dsc_name, ' '.join(unreadable_parts))
-		rmtree(debian_tmp_dir)
+		rmtree(tmp_dir)
 		return (None, size)
 	space = tmp_space()
 	if size > space:
