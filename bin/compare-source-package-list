@@ -652,7 +652,7 @@ def prepare(dsc_name, dsc_sha1, parts):
 		return (None, size)
 	space = tmp_space()
 	if size > space:
-		logging.warning('not enough space for temporary files: %s > %s', name, version, size, space)
+		logging.warning('not enough space for temporary files: %s > %s', size, space)
 		rmtree(tmp_dir)
 		return (None, size)
 	return (tmp_dir, size)
@@ -682,7 +682,7 @@ def prepare_debian(dsc_name, dsc_sha1, files, size):
 		return None
 	space = tmp_space()
 	if size > space:
-		logging.warning('not enough space for all temporary files: %s > %s', name, version, size, space)
+		logging.warning('not enough space for all temporary files: %s > %s', size, space)
 		rmtree(debian_tmp_dir)
 		return None
 	return debian_tmp_dir
