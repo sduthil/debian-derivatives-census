@@ -283,9 +283,8 @@ def update_dsc_file(dir, dsc_name, parts):
 					dsc[header] = [{type: hashes[type], 'size': size, 'name': name} if p['name'] == old else p for p in dsc[header]]
 	dsc_file.close()
 	os.remove(dsc_path) # So we don't change the original that the dsc links to
-	dsc_file = open(dsc_path,'wb')
-	dsc.dump(dsc_file)
-	dsc_file.close()
+	with open(dsc_path,'wb') as dsc_file:
+		dsc.dump(dsc_file)
 
 # Functions for downloading files and storing them in the hash caches
 
@@ -321,9 +320,8 @@ def download_and_check_hash(url, dir, hash, hash_type):
 		else:
 			if not os.path.exists(sha1_path):
 				logging.debug('correct hash for downloaded file, saving: %s %s %s %s', hash_type, hash, sha1, url)
-				f = open(sha1_path, 'w')
-				f.write(data)
-				f.close()
+				with open(sha1_path, 'w') as f:
+					f.write(data)
 			else:
 				logging.debug('correct hash for downloaded file, not saving: already in derivs cache: %s %s %s %s', hash_type, hash, sha1, url)
 			symlink(os.path.relpath(sha1_path, os.path.dirname(path)), path)
@@ -356,9 +354,8 @@ def download_sha1(url, dir, sha1):
 		if data_sha1 == sha1:
 			logging.debug('correct sha1 for downloaded file, saving: %s %s', sha1, url)
 			if not os.path.exists(path):
-				f = open(path, 'w')
-				f.write(data)
-				f.close()
+				with open(path, 'w') as f:
+					f.write(data)
 			return (False, sha1)
 		else:
 			logging.warning('incorrect sha1 for downloaded file, ignoring: %s != %s %s', sha1, data_sha1, url)
@@ -694,12 +691,10 @@ def get_changelog_entries(tmp_dir, dsc_name, dsc_sha1):
 	changelog_path = hash_path(sha1_changelog_dir, dsc_sha1)
 	if os.path.exists(changelog_path):
 		logging.debug('changelog cache exists for %s %s', dsc_name, dsc_sha1)
-		f = file(changelog_path)
-		if f:
+		with open(changelog_path) as f:
 			try: changelog_entries = json.load(f)
 			except ValueError: pass
 			else: return [tuple(entry) for entry in changelog_entries]
-			finally: f.close()
 
 	# Preparation
 	extract_path = os.path.join(tmp_dir,'extracted')
@@ -756,9 +751,8 @@ def get_changelog_entries(tmp_dir, dsc_name, dsc_sha1):
 	# Write the cache
 	makedirs(hash_path_parent(sha1_changelog_dir, dsc_sha1))
 	remove(changelog_path)
-	f = file(changelog_path, 'w')
-	json.dump(changelog_entries, f)
-	f.close()
+	with open(changelog_path, 'w') as f:
+		json.dump(changelog_entries, f)
 
 	return changelog_entries
 
@@ -874,13 +868,12 @@ def create_patch(tmp_dir, dsc_name, dsc_sha1, debian_tmp_dir, debian_dsc_name, d
 		filterdiff_output = filterdiff.communicate()[0]
 		diffstat = subprocess.Popen('diffstat', stdin=subprocess.PIPE, stdout=subprocess.PIPE, preexec_fn=subprocess_setup)
 		diffstat_output = diffstat.communicate(filterdiff_output)[0]
-		f = open(path_debian, 'w')
-		f.write('diffstat of debian/ for %s %s\n' % (os.path.splitext(debian_dsc_name)[0], os.path.splitext(dsc_name)[0]))
-		f.write('\n')
-		f.write(diffstat_output)
-		f.write('\n')
-		f.write(filterdiff_output)
-		f.close()
+		with open(path_debian, 'w') as f:
+			f.write('diffstat of debian/ for %s %s\n' % (os.path.splitext(debian_dsc_name)[0], os.path.splitext(dsc_name)[0]))
+			f.write('\n')
+			f.write(diffstat_output)
+			f.write('\n')
+			f.write(filterdiff_output)
 
 	# Patches > 100MB are probably not that useful, replace them with a link
 	for path in path_everything, path_debian:
@@ -899,18 +892,16 @@ def check_patch(debian_dsc_sha1, dsc_sha1):
 	lsdiff_path = sha1_lsdiff_path(debian_dsc_sha1, dsc_sha1)
 	if os.path.exists(lsdiff_path):
 		logging.debug('lsdiff cache exists for %s', patch_path)
-		f = file(lsdiff_path)
-		lsdiff = f.read()
-		f.close()
+		with open(lsdiff_path) as f:
+			lsdiff = f.read()
 	else:
 		logging.debug('lsdiff cache does not exist for %s', patch_path)
 		cmdline = ['lsdiff', patch_path]
 		process = subprocess.Popen(cmdline, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, preexec_fn=subprocess_setup)
 		lsdiff = process.communicate()[0]
 		makedirs(os.path.dirname(lsdiff_path))
-		f = file(lsdiff_path,'w')
-		f.write(lsdiff)
-		f.close()
+		with open(lsdiff_path,'w') as f:
+			f.write(lsdiff)
 	lsdiff = lsdiff.splitlines()
 	for line in lsdiff:
 		if line != 'debian/changelog' and not line.endswith('/debian/changelog'):
@@ -1126,9 +1117,8 @@ if data:
 				output_data[sha1][hash_type] = hash
 			elif hash_type != 'sha1' and hash != output_data[sha1][hash_type]:
 				logging.warning('hashes mismatched: %s: %s %s != %s', sha1, hash_type, hash, output_data[sha1][hash_type])
-	output = file(os.path.abspath(filename), 'wb')
-	yaml.safe_dump(output_data, output)
-	output.close()
+	with open(os.path.abspath(filename), 'wb') as output:
+		yaml.safe_dump(output_data, output)
 
 filename = sys.argv[4]
 data = patches
@@ -1154,9 +1144,8 @@ if data:
 		item['patches'] = patches
 		item['parts'] = parts_sha1
 		output_data.append(item)
-	output = file(os.path.abspath(filename), 'wb')
-	yaml.safe_dump(output_data, output)
-	output.close()
+	with open (os.path.abspath(filename), 'wb') as output:
+		yaml.safe_dump(output_data, output)
 else:
 	remove(filename)
 
@@ -1166,7 +1155,6 @@ if data:
 	data = list(set(data))
 	data.sort(cmp=lambda a,b: cmp(a[0],b[0]) or apt_version_cmp(a[1],b[1]) or cmp(a[2],b[2]) or apt_version_cmp(a[3],b[3]))
 	output_data = {}
-	output = file(os.path.abspath(filename), 'wb')
 	for debian_name, debian_version, name, version, dsc_url in data:
 		if debian_name not in output_data:
 			output_data[debian_name] = {}
@@ -1177,8 +1165,8 @@ if data:
 		item['version'] = version
 		item['dsc'] = dsc_url
 		output_data[debian_name][debian_version].append(item)
-	yaml.safe_dump(output_data, output)
-	output.close()
+	with open (os.path.abspath(filename), 'wb') as output:
+		yaml.safe_dump(output_data, output)
 else:
 	remove(filename)
 
@@ -1188,15 +1176,14 @@ if data:
 	data = list(set(data))
 	data.sort(cmp=lambda a,b: cmp(a[0],b[0]) or apt_version_cmp(a[1],b[1]) or cmp(a[2],b[2]))
 	output_data = {}
-	output = file(os.path.abspath(filename), 'wb')
 	for name, version, dsc_url in data:
 		if name not in output_data:
 			output_data[name] = {}
 		if version not in output_data[name]:
 			output_data[name][version] = []
 		output_data[name][version].append(str(dsc_url))
-	yaml.safe_dump(output_data, output)
-	output.close()
+	with open(os.path.abspath(filename), 'wb') as output:
+		yaml.safe_dump(output_data, output)
 else:
 	remove(filename)
 
