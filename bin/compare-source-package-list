@@ -182,9 +182,17 @@ def uncompressed_size(filename):
 			uc_size = struct.unpack('<Q', data)[0]
 	return max(file_size, uc_size)
 
+def tmp_size():
+	stats = os.statvfs(tempfile.gettempdir())
+	return stats.f_frsize*stats.f_blocks
+
 def tmp_space():
 	stats = os.statvfs(tempfile.gettempdir())
 	return stats.f_frsize*stats.f_bavail
+
+def tmp_environ(tmp_dir):
+	tmp_env = { 'TMP': tmp_dir, 'TMPDIR': tmp_dir, 'TEMP': tmp_dir, 'TEMPDIR': tmp_dir }
+	return dict(list(os.environ.items()) + list(tmp_env.items()))
 
 # Helper functions for generating path names
 
@@ -616,72 +624,89 @@ def srcpkg_to_derived_from(name, version):
 # Add symlinks for all needed files
 def prepare(dsc_name, dsc_sha1, parts):
 	logging.debug('preparing deriv directory for %s', dsc_name)
-	size = 0
+	total_size = 0
 	unreadable_parts = []
-	tmp_dir = tempfile.mkdtemp(prefix='derivs-cmp-srcpkg-%s-' % derivative_short_name)
+	symlink_parts = []
+	convert_lzip_parts = []
+	converted_parts = []
 	path = snapshot_hash_path(dsc_sha1)
 	if not os.path.exists(path): path = hash_path(sha1_cache_dir, dsc_sha1)
 	if not os.access(path, os.R_OK): unreadable_parts.append(dsc_name)
-	# The dsc data does not end up in the tmp dir, don't add the size here
-	dsc_path = os.path.join(tmp_dir, dsc_name)
-	os.symlink(path, dsc_path)
-	converted_parts = []
+	symlink_parts.append((path, dsc_name))
 	for part in parts:
 		path = part_hash_path(part)
 		if not path: continue
 		if not os.access(path, os.R_OK):
 			unreadable_parts.append(part['name'])
 			continue
-		else:
-			size += uncompressed_size(path)
-		part_path = os.path.join(tmp_dir, part['name'])
-		os.symlink(path, part_path)
-		# Some distributions allow additional compression schemes
-		# Here we work around this by recompressing with gzip
+		size = uncompressed_size(path)
+		total_size += size
+		symlink_parts.append((path, part['name']))
 		if part['name'].endswith('.lz'):
-			converted_parts.append(convert_lzip_to_gzip(tmp_dir, part['name']))
+			convert_lzip_parts.append(part['name'])
+
+	if unreadable_parts:
+		logging.warning('some parts of %s are unreadable: %s', dsc_name, ' '.join(unreadable_parts))
+		return (None, total_size)
+
+	# Ensure that the debdiff will have enough space
+	tmp_parent = None
+	if total_size*2.0 > tmp_size()/2.0 or total_size > tmp_space():
+		logging.warning('prepare: not enough space in /tmp, using scratch space: %s %s %s', total_size, tmp_size(), tmp_space())
+		tmp_parent = os.path.expanduser('~/tmp')
+
+	tmp_dir = tempfile.mkdtemp(prefix='derivs-cmp-srcpkg-%s-' % derivative_short_name, dir=tmp_parent)
+
+	# Setup the symlinks for dpkg-source/debdiff/etc
+	for symlink_target, symlink_name in symlink_parts:
+		symlink_path = os.path.join(tmp_dir, symlink_name)
+		os.symlink(symlink_target, symlink_path)
+
+	# Some distributions allow additional compression schemes
+	# Here we work around this by recompressing with gzip
+	for part_name in convert_lzip_parts:
+		converted_parts.append(convert_lzip_to_gzip(tmp_dir, part_name))
+
 	# Update the dsc file if we recompressed any files
 	if converted_parts:
 		update_dsc_file(tmp_dir, dsc_name, converted_parts)
-	if unreadable_parts:
-		logging.warning('some parts of %s are unreadable: %s', dsc_name, ' '.join(unreadable_parts))
-		rmtree(tmp_dir)
-		return (None, size)
-	space = tmp_space()
-	if size > space:
-		logging.warning('not enough space for temporary files: %s > %s', size, space)
-		rmtree(tmp_dir)
-		return (None, size)
-	return (tmp_dir, size)
 
-def prepare_debian(dsc_name, dsc_sha1, files, size):
+	return (tmp_dir, total_size)
+
+def prepare_debian(dsc_name, dsc_sha1, files, total_size):
 	logging.debug('preparing Debian directory for %s', dsc_name)
 	unreadable_parts = []
-	debian_tmp_dir = tempfile.mkdtemp(prefix='derivs-cmp-srcpkg-Debian-')
+	symlink_parts = []
 	path = snapshot_hash_path(dsc_sha1)
 	if not os.access(path, os.R_OK): unreadable_parts.append(dsc_name)
-	# The dsc data does not end up in the tmp dir, don't add the size here
-	dsc_path = os.path.join(debian_tmp_dir, dsc_name)
-	os.symlink(path, dsc_path)
+	symlink_parts.append((path, dsc_name))
 	for file in files:
 		part_name, part_sha1 = file
 		path = snapshot_hash_path(part_sha1)
 		if not os.access(path, os.R_OK):
 			unreadable_parts.append(part_name)
 			continue
-		else:
-			size += uncompressed_size(path)
-		part_path = os.path.join(debian_tmp_dir, part_name)
-		os.symlink(path, part_path)
+		size = uncompressed_size(path)
+		total_size += size
+		symlink_parts.append((path, part_name))
+
 	if unreadable_parts:
 		logging.warning('some parts of %s are unreadable: %s', dsc_name, ' '.join(unreadable_parts))
-		rmtree(debian_tmp_dir)
 		return None
-	space = tmp_space()
-	if size > space:
-		logging.warning('not enough space for all temporary files: %s > %s', size, space)
-		rmtree(debian_tmp_dir)
-		return None
+
+	# Ensure that the debdiff will have enough space
+	tmp_parent = None
+	if total_size > tmp_space():
+		logging.warning('prepare_debian: not enough space in /tmp, using scratch space: %s %s %s', total_size, tmp_size(), tmp_space())
+		tmp_parent = os.path.expanduser('~/tmp')
+
+	debian_tmp_dir = tempfile.mkdtemp(prefix='derivs-cmp-srcpkg-Debian-', dir=tmp_parent)
+
+	# Setup the symlinks for dpkg-source/debdiff/etc
+	for symlink_target, symlink_name in symlink_parts:
+		symlink_path = os.path.join(debian_tmp_dir, symlink_name)
+		os.symlink(symlink_target, symlink_path)
+
 	return debian_tmp_dir
 
 def get_changelog_entries(tmp_dir, dsc_name, dsc_sha1):
@@ -702,7 +727,7 @@ def get_changelog_entries(tmp_dir, dsc_name, dsc_sha1):
 	# Unpack the source tree
 	logging.debug('unpacking source package %s', dsc_name)
 	cmdline = ['dpkg-source', '-x', dsc_name, 'extracted']
-	process = subprocess.Popen(cmdline, cwd=tmp_dir, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, preexec_fn=subprocess_setup)
+	process = subprocess.Popen(cmdline, cwd=tmp_dir, env=tmp_environ(tmp_dir), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, preexec_fn=subprocess_setup)
 	output = process.communicate()[0]
 	if process.returncode:
 		logging.warning('dpkg-source reported failure to extract %s:', dsc_name)
@@ -832,7 +857,7 @@ def create_patch(tmp_dir, dsc_name, dsc_sha1, debian_tmp_dir, debian_dsc_name, d
 		makedirs(os.path.dirname(path_everything))
 		cmdline = ['debdiff', '--quiet', '--diffstat', debian_dsc_path, dsc_path]
 		stdout = open(path_everything, 'w')
-		process = subprocess.Popen(cmdline, stdout=stdout, stderr=subprocess.PIPE, preexec_fn=subprocess_setup)
+		process = subprocess.Popen(cmdline, env=tmp_environ(tmp_dir), stdout=stdout, stderr=subprocess.PIPE, preexec_fn=subprocess_setup)
 		output = process.communicate()[1]
 		stdout.close()
 		if process.returncode == 255:
@@ -864,7 +889,7 @@ def create_patch(tmp_dir, dsc_name, dsc_sha1, debian_tmp_dir, debian_dsc_name, d
 	if os.path.exists(path_everything) and not os.path.exists(path_debian):
 		makedirs(os.path.dirname(path_debian))
 		cmdline = ['filterdiff', '--include=*/debian/*', path_everything]
-		filterdiff = subprocess.Popen(cmdline, stdout=subprocess.PIPE, preexec_fn=subprocess_setup)
+		filterdiff = subprocess.Popen(cmdline, env=tmp_environ(tmp_dir), stdout=subprocess.PIPE, preexec_fn=subprocess_setup)
 		filterdiff_output = filterdiff.communicate()[0]
 		diffstat = subprocess.Popen('diffstat', stdin=subprocess.PIPE, stdout=subprocess.PIPE, preexec_fn=subprocess_setup)
 		diffstat_output = diffstat.communicate(filterdiff_output)[0]
