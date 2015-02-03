@@ -60,8 +60,8 @@ apt: sources.list FORCE
 
 sources.files sources.patches sources.links sources.new sources.log: sources.stamp
 
-sources.stamp: sources.list apt
-	compare-source-package-list $^ sources.files sources.patches sources.links sources.new sources.log
+sources.stamp: sources.list apt FORCE
+	compare-source-package-list sources.list apt sources.files sources.patches sources.links sources.new sources.log
 	touch $@
 
 name: wiki.txt
