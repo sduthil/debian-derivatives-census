@@ -150,8 +150,8 @@ def uncompressed_size(filename):
 	uc_size = 0
 	file_size = os.path.getsize(filename)
 	with open(filename, 'rb') as f:
+		magic = f.read(6)
 		# *.gz
-		magic = f.read(4)
 		if magic[:2] == "\x1f\x8b":
 			f.seek(-4, 2)
 			data = f.read()
@@ -161,22 +161,22 @@ def uncompressed_size(filename):
 			# Crude estimate based on average compression ratio of 25%
 			uc_size = file_size*4
 		# *.xz
-		elif magic == '7zXZ':
+		elif magic == "\xfd7zXZ\x00":
 			cmdline = ['xz', '--verbose', '--list', filename]
-			process = subprocess.Popen(cmdline, cwd=dir, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, preexec_fn=subprocess_setup)
+			process = subprocess.Popen(cmdline, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, preexec_fn=subprocess_setup)
 			output = process.communicate()[0]
 			if process.returncode:
 				logging.warning('xz reported failure to check size of %s:', filename)
 				logging.warning(output)
 			else:
-				for line in output:
+				for line in output.splitlines():
 					line = line.strip()
 					if line.startswith('Uncompressed size:'):
 						match = re.match(r'Uncompressed size:[^\(]*\(([0-9,]+) *B\)', line)
 						if match: uc_size = int(''.join(match.group(1).split(',')))
 						else: logging.warning('xz reported weird output for %s: %s', filename, line)
 		# *.lz
-		elif magic == 'LZIP':
+		elif magic[:4] == 'LZIP':
 			f.seek(-16, 2)
 			data = f.read(8)
 			uc_size = struct.unpack('<Q', data)[0]
