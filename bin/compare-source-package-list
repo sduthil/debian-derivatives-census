@@ -907,7 +907,10 @@ def check_patch(debian_dsc_sha1, dsc_sha1):
 		if line != 'debian/changelog' and not line.endswith('/debian/changelog'):
 			logging.debug('patch changes files other than debian/changelog')
 			return True
-	logging.debug('patch does not change files other than debian/changelog')
+	if lsdiff:
+		logging.debug('patch does not change files other than debian/changelog')
+	else:
+		logging.debug('patch does not change any files')
 	return False
 
 def present_patch(name, version, dsc_sha1, debian_name, debian_version,  debian_dsc_sha1):
