@@ -652,7 +652,7 @@ def prepare(dsc_name, dsc_sha1, parts):
 	# Ensure that the debdiff will have enough space
 	tmp_parent = None
 	if total_size*2.0 > tmp_size()/2.0 or total_size > tmp_space():
-		logging.warning('prepare: not enough space in /tmp, using scratch space: %s %s %s', total_size, tmp_size(), tmp_space())
+		logging.info('prepare: not enough space in /tmp, using scratch space: %s %s %s', total_size, tmp_size(), tmp_space())
 		tmp_parent = os.path.expanduser('~/tmp')
 
 	tmp_dir = tempfile.mkdtemp(prefix='derivs-cmp-srcpkg-%s-' % derivative_short_name, dir=tmp_parent)
@@ -697,7 +697,7 @@ def prepare_debian(dsc_name, dsc_sha1, files, total_size):
 	# Ensure that the debdiff will have enough space
 	tmp_parent = None
 	if total_size > tmp_space():
-		logging.warning('prepare_debian: not enough space in /tmp, using scratch space: %s %s %s', total_size, tmp_size(), tmp_space())
+		logging.info('prepare_debian: not enough space in /tmp, using scratch space: %s %s %s', total_size, tmp_size(), tmp_space())
 		tmp_parent = os.path.expanduser('~/tmp')
 
 	debian_tmp_dir = tempfile.mkdtemp(prefix='derivs-cmp-srcpkg-Debian-', dir=tmp_parent)
