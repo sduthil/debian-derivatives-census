@@ -172,7 +172,7 @@ def uncompressed_size(filename):
 				for line in output.splitlines():
 					line = line.strip()
 					if line.startswith('Uncompressed size:'):
-						match = re.match(r'Uncompressed size:[^\(]*\(([0-9,]+) *B\)', line)
+						match = re.match(r'Uncompressed size:  .*?([0-9,]+) B', line)
 						if match: uc_size = int(''.join(match.group(1).split(',')))
 						else: logging.warning('xz reported weird output for %s: %s', filename, line)
 		# *.lz
