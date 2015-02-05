@@ -6,6 +6,7 @@ flock -n 666 || exit 0
 
 set -e
 umask 0002
+mkdir ~/tmp
 time make -j3 -s -i
 cd var
 sed -i '/WARNING: unable to download sha1 file, ignoring: Forbidden .*non-free/s/WARNING/INFO/' ./Ordissimo/sources.log
