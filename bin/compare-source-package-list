@@ -645,6 +645,7 @@ def prepare(dsc_name, dsc_sha1, parts):
 		total_size += size
 		symlink_parts.append((path, part['name']))
 		if part['name'].endswith('.lz'):
+			total_size += size
 			convert_lzip_parts.append(part['name'])
 
 	if unreadable_parts:
