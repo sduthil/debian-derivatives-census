@@ -261,6 +261,7 @@ def convert_lzip_to_gzip(dir, name):
 	if process.returncode:
 		logging.warning('lzip reported failure to decompress %s:', name)
 		logging.warning(output)
+		return None
 	bname = name[0:-3] # Strip off .lz
 	cmdline = ['gzip', '-1', '--', bname] # gzip -1 to reduce overhead
 	process = subprocess.Popen(cmdline, cwd=dir, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, preexec_fn=subprocess_setup)
@@ -268,6 +269,7 @@ def convert_lzip_to_gzip(dir, name):
 	if process.returncode:
 		logging.warning('gzip reported failure to compress %s:', bname)
 		logging.warning(output)
+		return None
 	return (name, bname+'.gz')
 
 def update_dsc_file(dir, dsc_name, parts):
@@ -667,7 +669,12 @@ def prepare(dsc_name, dsc_sha1, parts):
 	# Some distributions allow additional compression schemes
 	# Here we work around this by recompressing with gzip
 	for part_name in convert_lzip_parts:
-		converted_parts.append(convert_lzip_to_gzip(tmp_dir, part_name))
+		converted = convert_lzip_to_gzip(tmp_dir, part_name)
+		if converted is not None:
+			converted_parts.append(converted)
+		else:
+			rmtree(tmp_dir)
+			return (None, total_size)
 
 	# Update the dsc file if we recompressed any files
 	if converted_parts:
