@@ -12,6 +12,7 @@ cd var
 sed -i '/WARNING: unable to download sha1 file, ignoring: Forbidden .*non-free/s/WARNING/INFO/' ./Ordissimo/sources.log
 sed -i '/WARNING: finished processing source package .*: sha1 missing for dsc file/s/WARNING/INFO/' ./Ordissimo/sources.log
 grep -C5 WARN ./*/sources.log > sources.log.warnings.tmp
+sed -i '/ using scratch space: /s/: [0-9]\+ [0-9]\+ [0-9]\+$//' sources.log.warnings.tmp
 diff -u sources.log.warnings sources.log.warnings.tmp || true
 mv --force sources.log.warnings.tmp sources.log.warnings
 find ~/tmp /tmp -mindepth 1 -user qa | head -n 10 2> /dev/null
