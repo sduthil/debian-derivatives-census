@@ -657,6 +657,9 @@ def prepare(dsc_name, dsc_sha1, parts):
 	if total_size*2.0 > tmp_size()/2.0 or total_size > tmp_space():
 		logging.info('prepare: not enough space in /tmp, using scratch space: %s %s %s', total_size, tmp_size(), tmp_space())
 		tmp_parent = os.path.expanduser('~/tmp')
+	elif dsc_name.startswith('libreoffice_') or dsc_name.startswith('iceweasel_'):
+		logging.info('prepare: iceweasel/libreoffice, always using scratch space')
+		tmp_parent = os.path.expanduser('~/tmp')
 	else:
 		logging.debug('prepare: enough space in /tmp, not using scratch space: %s %s %s', total_size, tmp_size(), tmp_space())
 
@@ -708,6 +711,9 @@ def prepare_debian(dsc_name, dsc_sha1, files, total_size):
 	tmp_parent = None
 	if total_size > tmp_space():
 		logging.info('prepare_debian: not enough space in /tmp, using scratch space: %s %s %s', total_size, tmp_size(), tmp_space())
+		tmp_parent = os.path.expanduser('~/tmp')
+	elif dsc_name.startswith('libreoffice_') or dsc_name.startswith('iceweasel_'):
+		logging.info('prepare: iceweasel/libreoffice, always using scratch space')
 		tmp_parent = os.path.expanduser('~/tmp')
 	else:
 		logging.debug('prepare_debian: enough space in /tmp, not using scratch space: %s %s %s', total_size, tmp_size(), tmp_space())
