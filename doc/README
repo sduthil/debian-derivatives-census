@@ -7,11 +7,11 @@ transform it in order to integrate information useful to Debian contributors
 into the Debian infrastructure. More information about Debian derivatives and
 the derivatives census is available on these wiki pages:
 
-http://wiki.debian.org/DerivativesFrontDesk
-http://wiki.debian.org/Derivatives/Census
-http://wiki.debian.org/Derivatives/Integration
-http://wiki.debian.org/Derivatives/CensusQA
-http://wiki.debian.org/Derivatives/CensusFull
+https://wiki.debian.org/DerivativesFrontDesk
+https://wiki.debian.org/Derivatives/Census
+https://wiki.debian.org/Derivatives/Integration
+https://wiki.debian.org/Derivatives/CensusQA
+https://wiki.debian.org/Derivatives/CensusFull
 
 The scripts are run via a framework based on make. With the make-based
 framework, data from each derivative is stored in a subdirectory of the

@@ -100,7 +100,7 @@ archs = [
 	'sparc64',
 ]
 
-# Hack to add sha512 support (http://bugs.debian.org/732599)
+# Hack to add sha512 support (https://bugs.debian.org/732599)
 if 'sha512' not in debian.deb822.Release._multivalued_fields:
 	debian.deb822.Release._multivalued_fields['sha512'] = ['sha512', 'size', 'name']
 if 'checksums-sha512' not in debian.deb822.Sources._multivalued_fields:
