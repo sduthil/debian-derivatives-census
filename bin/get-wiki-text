@@ -8,4 +8,4 @@
 # Usage:
 # get-wiki-text <wiki page name> <wiki page file>
 
-exec get-url-eol-fix "http://wiki.debian.org/Derivatives/$1?action=raw" "$2"
+exec get-url-eol-fix "https://wiki.debian.org/Derivatives/$1?action=raw" "$2"

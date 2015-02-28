@@ -8,4 +8,4 @@
 # Usage:
 # get-wiki-html <wiki page name> <wiki page file>
 
-exec get-url "http://wiki.debian.org/Derivatives/$1" "$2"
+exec get-url "https://wiki.debian.org/Derivatives/$1" "$2"
