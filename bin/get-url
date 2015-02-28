@@ -11,8 +11,28 @@
 # Get a temporary filename
 tmp="$(mktemp "$(readlink --canonicalize-missing "$2").tmp.XXXXXXXXXXXXXX")" || exit $?
 
+# Check for required SSL configuration
+case $1 in
+	https://*.debian.org/*)
+		# FIXME: curl is incapable of verifying service certs without a CA cert
+		if [ -d /etc/ssl/ca-debian ] ; then
+			capath=/etc/ssl/ca-debian
+		fi
+	;;
+	https://*)
+		# debian.org machines split out CA certs into a separate directory
+		if [ -d /etc/ssl/ca-global ] ; then
+			capath=/etc/ssl/ca-global
+		fi
+	;;
+esac
+
 # Try to download a newer file
-out="$(curl --config "$CURLRC" --time-cond "$2.remote-timestamp" --output "$tmp" "$1" 2>&1)"
+if [ -z "$capath" ] ; then
+	out="$(curl --config "$CURLRC" --time-cond "$2.remote-timestamp" --output "$tmp" "$1" 2>&1)"
+else
+	out="$(curl --config "$CURLRC" --capath "$capath" --time-cond "$2.remote-timestamp" --output "$tmp" "$1" 2>&1)"
+fi
 
 # Preserve the exit value from curl
 ret=$?
