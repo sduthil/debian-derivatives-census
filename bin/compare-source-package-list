@@ -124,6 +124,11 @@ checksum_headers = ('Checksums-Sha1', 'Checksums-Sha256', 'Files')
 user_agent = 'Debian Derivatives Census QA bot'
 timeout = 60
 ishex = lambda s: not(set(s)-set(string.hexdigits))
+debian_ssl_bundle = '/etc/ssl/ca-global/ca-certificates.crt'
+if os.path.exists(debian_ssl_bundle):
+	ssl_verify = debian_ssl_bundle
+else:
+	ssl_verify = True
 
 # Init
 apt_pkg.init()
@@ -304,7 +309,7 @@ def download_and_check_hash(url, dir, hash, hash_type):
 		logging.debug('downloading %s', url)
 		makedirs(parent)
 		headers = { 'User-Agent' : user_agent }
-		req = requests.get(url, headers=headers, timeout=timeout)
+		req = requests.get(url, headers=headers, timeout=timeout, verify=ssl_verify)
 		req.raise_for_status() # to catch HTTP errors
 		data = req.content
 		if hash_type == 'sha256':
@@ -354,7 +359,7 @@ def download_sha1(url, dir, sha1):
 		logging.debug('downloading sha1: %s %s', sha1, url)
 		makedirs(parent)
 		headers = { 'User-Agent' : user_agent }
-		req = requests.get(url, headers=headers, timeout=timeout)
+		req = requests.get(url, headers=headers, timeout=timeout, verify=ssl_verify)
 		req.raise_for_status() # to catch HTTP errors
 		data = req.content
 		data_sha1 = hashlib.sha1(data).hexdigest()
