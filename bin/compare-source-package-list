@@ -377,10 +377,10 @@ def download_sha1(url, dir, sha1):
 		return ('unknown', None)
 	except requests.HTTPError as e:
 		st = req.status_code
-		logging.warning('unable to download hash file, ignoring: %s: %s %s', st, e, url)
+		logging.warning('unable to download sha1 file, ignoring: %s: %s %s', st, e, url)
 		return ('unknown', None)
 	except socket.error, e:
-		logging.warning('unable to download hash file, ignoring: %s %s', e, url)
+		logging.warning('unable to download sha1 file, ignoring: %s %s', e, url)
 		return ('unknown', None)
 
 # Functions for checking the hash caches
