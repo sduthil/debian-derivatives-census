@@ -309,9 +309,9 @@ def download_and_check_hash(url, dir, hash, hash_type):
 		logging.debug('downloading %s', url)
 		makedirs(parent)
 		headers = { 'User-Agent' : user_agent }
-		req = requests.get(url, headers=headers, timeout=timeout, verify=ssl_verify)
-		req.raise_for_status() # to catch HTTP errors
-		data = req.content
+		response = requests.get(url, headers=headers, timeout=timeout, verify=ssl_verify)
+		response.raise_for_status() # to catch HTTP errors
+		data = response.content
 		if hash_type == 'sha256':
 			data_hash = hashlib.sha256(data).hexdigest()
 		elif hash_type == 'md5sum':
@@ -345,7 +345,7 @@ def download_and_check_hash(url, dir, hash, hash_type):
 		logging.warning('unable to download hash file, ignoring: %s %s', e, url)
 		return ('unknown', None)
 	except requests.HTTPError, e:
-		st = req.status_code
+		st = response.status_code
 		logging.warning('unable to download hash file, ignoring: %s: %s %s', st, e, url)
 		return ('unknown', None)
 	except socket.error, e:
@@ -359,9 +359,9 @@ def download_sha1(url, dir, sha1):
 		logging.debug('downloading sha1: %s %s', sha1, url)
 		makedirs(parent)
 		headers = { 'User-Agent' : user_agent }
-		req = requests.get(url, headers=headers, timeout=timeout, verify=ssl_verify)
-		req.raise_for_status() # to catch HTTP errors
-		data = req.content
+		response = requests.get(url, headers=headers, timeout=timeout, verify=ssl_verify)
+		response.raise_for_status() # to catch HTTP errors
+		data = response.content
 		data_sha1 = hashlib.sha1(data).hexdigest()
 		if data_sha1 == sha1:
 			logging.debug('correct sha1 for downloaded file, saving: %s %s', sha1, url)
@@ -376,7 +376,7 @@ def download_sha1(url, dir, sha1):
 		logging.warning('unable to download sha1 file, ignoring: %s %s', e, url)
 		return ('unknown', None)
 	except requests.HTTPError as e:
-		st = req.status_code
+		st = response.status_code
 		logging.warning('unable to download sha1 file, ignoring: %s: %s %s', st, e, url)
 		return ('unknown', None)
 	except socket.error, e:
