@@ -311,7 +311,7 @@ def download_and_check_hash(url, dir, hash, hash_type):
 		headers = { 'User-Agent' : user_agent }
 		response = requests.get(url, headers=headers, timeout=timeout, verify=ssl_verify)
 		response.raise_for_status() # to catch HTTP errors
-		data = response.content
+		data = response.raw.read()
 		if hash_type == 'sha256':
 			data_hash = hashlib.sha256(data).hexdigest()
 		elif hash_type == 'md5sum':
@@ -361,7 +361,7 @@ def download_sha1(url, dir, sha1):
 		headers = { 'User-Agent' : user_agent }
 		response = requests.get(url, headers=headers, timeout=timeout, verify=ssl_verify)
 		response.raise_for_status() # to catch HTTP errors
-		data = response.content
+		data = response.raw.read()
 		data_sha1 = hashlib.sha1(data).hexdigest()
 		if data_sha1 == sha1:
 			logging.debug('correct sha1 for downloaded file, saving: %s %s', sha1, url)
