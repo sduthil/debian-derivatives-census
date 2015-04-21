@@ -130,6 +130,10 @@ if os.path.exists(debian_ssl_bundle):
 else:
 	ssl_verify = True
 
+# Workaround issue where some servers send .dsc files compressed
+# and the requests module helpfully keeps that in response.raw.read()
+del requests.defaults.defaults['base_headers']['Accept-Encoding']
+
 # Init
 apt_pkg.init()
 
