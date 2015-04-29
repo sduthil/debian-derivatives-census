@@ -15,7 +15,7 @@ import yaml
 def shortslug(name):
 	return name[:4] if name.startswith('lib') else name[0]
 
-url = 'https://dex.alioth.debian.org/census/patches'
+url = 'http://deriv.debian.net/patches'
 derivatives = sys.argv[1:-2]
 sources_patches = sys.argv[-2]
 sources_patches_pts = sys.argv[-1]
