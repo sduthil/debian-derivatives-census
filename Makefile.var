@@ -23,6 +23,8 @@ ALL = \
 	compare-planet-heads \
 	debtags \
 	distrowatch \
+	sources.files \
+	sources.patches \
 	template.txt
 
 all: $(ALL)

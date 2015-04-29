@@ -11,6 +11,7 @@ ALL = \
 	wiki.txt \
 	status \
 	sources.list \
+	sources.stamp \
 	apt \
 	name \
 	vendor \
