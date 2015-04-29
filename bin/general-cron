@@ -1,5 +1,5 @@
 #!/bin/bash
-# This script can be run on any machine, currently run on alioth
+# This script can be run on any machine
 
 (
 flock -n 666 || exit 0
