@@ -121,18 +121,19 @@ patch_too_large = os.path.abspath('../../doc/patch-too-large.txt')
 checksum_types = ('sha1', 'sha256', 'md5sum')
 checksum_hashlib = ('sha1', 'sha256', 'md5')
 checksum_headers = ('Checksums-Sha1', 'Checksums-Sha256', 'Files')
-user_agent = 'Debian Derivatives Census QA bot'
-timeout = 60
 ishex = lambda s: not(set(s)-set(string.hexdigits))
+
+timeout = 60
+session = requests.Session()
+session.headers['User-Agent'] = 'Debian Derivatives Census QA bot'
 debian_ssl_bundle = '/etc/ssl/ca-global/ca-certificates.crt'
 if os.path.exists(debian_ssl_bundle):
-	ssl_verify = debian_ssl_bundle
-else:
-	ssl_verify = True
+	session.verify = debian_ssl_bundle
 
 # Workaround issue where some servers send .dsc files compressed
 # and the requests module helpfully keeps that in response.raw.read()
-del requests.defaults.defaults['base_headers']['Accept-Encoding']
+session.stream = True
+del session.headers['Accept-Encoding']
 
 # Init
 apt_pkg.init()
@@ -312,8 +313,7 @@ def download_and_check_hash(url, dir, hash, hash_type):
 		path = hash_path(dir,hash)
 		logging.debug('downloading %s', url)
 		makedirs(parent)
-		headers = { 'User-Agent' : user_agent }
-		response = requests.get(url, headers=headers, timeout=timeout, verify=ssl_verify)
+		response = session.get(url, timeout=timeout)
 		response.raise_for_status() # to catch HTTP errors
 		data = response.raw.read()
 		if hash_type == 'sha256':
@@ -362,8 +362,7 @@ def download_sha1(url, dir, sha1):
 		path = hash_path(dir,sha1)
 		logging.debug('downloading sha1: %s %s', sha1, url)
 		makedirs(parent)
-		headers = { 'User-Agent' : user_agent }
-		response = requests.get(url, headers=headers, timeout=timeout, verify=ssl_verify)
+		response = session.get(url, timeout=timeout)
 		response.raise_for_status() # to catch HTTP errors
 		data = response.raw.read()
 		data_sha1 = hashlib.sha1(data).hexdigest()
