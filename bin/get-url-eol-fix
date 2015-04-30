@@ -12,14 +12,15 @@
 tmp="$(mktemp "$(readlink --canonicalize-missing "$2").tmp.XXXXXXXXXXXXXX")" || exit $?
 
 # Check for required SSL configuration
+# Need configuration for http in case of redirects
 case $1 in
-	https://*.debian.org/*)
+	http://*.debian.org/*|https://*.debian.org/*)
 		# FIXME: curl is incapable of verifying service certs without a CA cert
 		if [ -d /etc/ssl/ca-debian ] ; then
 			capath=/etc/ssl/ca-debian
 		fi
 	;;
-	https://*)
+	http://*|https://*)
 		# debian.org machines split out CA certs into a separate directory
 		if [ -d /etc/ssl/ca-global ] ; then
 			capath=/etc/ssl/ca-global
