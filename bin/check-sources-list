@@ -70,10 +70,10 @@ if not sources_entries:
 	logging.warning('no sources entries')
 	sys.exit()
 
-if not [entry for entry in sources_entries if entry.type == 'deb']:
+if not [e for e in sources_entries if e.type == 'deb']:
 	logging.warning('no deb entries')
 
-if not [entry for entry in sources_entries if entry.type == 'deb-src']:
+if not [e for e in sources_entries if e.type == 'deb-src']:
 	logging.warning('no deb-src entries')
 
 # Check sources.list
