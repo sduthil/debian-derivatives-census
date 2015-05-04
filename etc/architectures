@@ -1,6 +1,7 @@
 alpha
 amd64
 arm
+arm64
 armel
 armhf
 avr32
@@ -15,8 +16,11 @@ mips
 mipsel
 powerpc
 powerpcspe
+ppc64
+ppc64el
 s390
 s390x
 sh4
 sparc
 sparc64
+x32
