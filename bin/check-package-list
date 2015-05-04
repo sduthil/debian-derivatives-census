@@ -75,30 +75,9 @@ release_headers = [
 	'SHA256',
 	'SHA512',
 ]
-archs = [
-	'alpha',
-	'amd64',
-	'arm',
-	'armel',
-	'armhf',
-	'hppa',
-	'hurd-i386',
-	'i386',
-	'ia64',
-	'kfreebsd-amd64',
-	'kfreebsd-i386',
-	'mips',
-	'mipsel',
-	'powerpc',
-	's390',
-	's390x',
-	'sparc',
-	'avr32',
-	'm68k',
-	'powerpcspe',
-	'sh4',
-	'sparc64',
-]
+archs_file = os.path.realpath(os.path.join(__file__, '..', '..', 'etc', 'architectures'))
+with open(archs_file) as f:
+	archs = f.read().splitlines()
 
 # Hack to add sha512 support (https://bugs.debian.org/732599)
 if 'sha512' not in debian.deb822.Release._multivalued_fields:

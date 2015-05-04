@@ -19,7 +19,9 @@ class sources_entry:
 	def __repr__(self):
 		return 'sources_entry(%r)' % self.__dict__
 
-archs = ['alpha', 'amd64', 'arm', 'armel', 'armhf', 'hppa', 'hurd-i386', 'i386', 'ia64', 'kfreebsd-amd64', 'kfreebsd-i386', 'mips', 'mipsel', 'powerpc', 's390', 's390x', 'sparc', 'avr32', 'm68k', 'powerpcspe', 'sh4', 'sparc64']
+archs_file = os.path.realpath(os.path.join(__file__, '..', '..', 'etc', 'architectures'))
+with open(archs_file) as f:
+	archs = f.read().splitlines()
 
 # Setup logging 
 try: os.remove(sys.argv[2])
