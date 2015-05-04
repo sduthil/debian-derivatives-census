@@ -135,6 +135,10 @@ if os.path.exists(debian_ssl_bundle):
 session.stream = True
 del session.headers['Accept-Encoding']
 
+# Don't do anything on hosts without the snapshot.d.o farm
+if not os.path.isdir(snapshot_cache_dir):
+	sys.exit()
+
 # Init
 apt_pkg.init()
 
