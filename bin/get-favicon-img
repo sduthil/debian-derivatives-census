@@ -26,7 +26,7 @@ if test -s "$1" ; then
 			*)
 				echo "Error downloading $(cat "$1"):"
 				echo "File is not an image: $mime"
-				rm --force "$2"
+				rm --force "$2" "$2.remote-timestamp"
 				exit 1
 			;;
 		esac
