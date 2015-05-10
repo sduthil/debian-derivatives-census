@@ -9,5 +9,26 @@
 # get-logo-img <logo URLs file> <logo file>
 
 if test -s "$1" ; then
-	exec get-url "$(cat "$1")" "$2"
+	get-url "$(cat "$1")" "$2"
+
+	# Preserve the exit value from downloading
+	ret=$?
+
+	if [ $ret -ne 0 ]; then
+		exit $ret
+	else
+		# Check that the file is an image
+		mime=$(file --brief --mime-type "$2")
+		case $mime in
+			image/*)
+				exit 0
+			;;
+			*)
+				echo "Error downloading $(cat "$1"):"
+				echo "File is not an image: $mime"
+				rm --force "$2"
+				exit 1
+			;;
+		esac
+	fi
 fi

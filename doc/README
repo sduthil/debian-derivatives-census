@@ -180,6 +180,7 @@ coreutils | busybox
 bash | dash | zsh | sh
 diffutils
 curl
+file
 sed
 apt
 perl
