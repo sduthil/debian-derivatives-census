@@ -17,23 +17,19 @@ case $1 in
 	http://*.debian.org/*|https://*.debian.org/*)
 		# FIXME: curl is incapable of verifying service certs without a CA cert
 		if [ -d /etc/ssl/ca-debian ] ; then
-			capath=/etc/ssl/ca-debian
+			export CURL_CA_BUNDLE=/etc/ssl/ca-debian/ca-certificates.crt
 		fi
 	;;
 	http://*|https://*)
 		# debian.org machines split out CA certs into a separate directory
 		if [ -d /etc/ssl/ca-global ] ; then
-			capath=/etc/ssl/ca-global
+			export CURL_CA_BUNDLE=/etc/ssl/ca-global/ca-certificates.crt
 		fi
 	;;
 esac
 
 # Try to download a newer file
-if [ -z "$capath" ] ; then
-	out="$(curl --config "$CURLRC" --time-cond "$2.remote-timestamp" --output "$tmp" "$1" 2>&1)"
-else
-	out="$(curl --config "$CURLRC" --capath "$capath" --time-cond "$2.remote-timestamp" --output "$tmp" "$1" 2>&1)"
-fi
+out="$(curl --config "$CURLRC" --time-cond "$2.remote-timestamp" --output "$tmp" "$1" 2>&1)"
 
 # Preserve the exit value from curl
 ret=$?
