@@ -18,8 +18,8 @@ cmp = dircmp(os.path.join(sys.argv[1],'heads','deriv'), sys.argv[2], ['.svn'])
 if cmp.left_only or cmp.right_only or cmp.diff_files:
 	print 'Changes to planet head(s), please review and commit:'
 	print 'https://wiki.debian.org/Derivatives/Integration#planet'
-if cmp.left_only:    print 'New planet head(s) available for: %s' % ' '.join(sorted(cmp.left_only))
-if cmp.right_only:   print 'Planet head(s) have been removed for: %s' % ' '.join(sorted(cmp.right_only))
+if cmp.left_only:    print 'Planet head(s) have been removed for: %s' % ' '.join(sorted(cmp.left_only))
+if cmp.right_only:   print 'New planet head(s) available for: %s' % ' '.join(sorted(cmp.right_only))
 if cmp.diff_files:   print 'Updated planet head(s) available for: %s' % ' '.join(sorted(cmp.diff_files))
 if cmp.funny_files:  print 'Common trouble: %s' % ' '.join(sorted(cmp.funny_files))
 if cmp.common_dirs:  print 'Common subdirs: %s' % ' '.join(sorted(cmp.common_dirs))
