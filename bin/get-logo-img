@@ -9,24 +9,28 @@
 # get-logo-img <logo URLs file> <logo file>
 
 if test -s "$1" ; then
-	get-url "$(cat "$1")" "$2"
+	get-url "$(cat "$1")" "$2.tmp"
 
 	# Preserve the exit value from downloading
 	ret=$?
 
 	if [ $ret -ne 0 ]; then
+		mv --force "$2.tmp" "$2"
+		mv --force "$2.tmp.remote-timestamp" "$2.remote-timestamp"
 		exit $ret
 	else
 		# Check that the file is an image
-		mime=$(file --brief --mime-type "$2")
+		mime=$(file --brief --mime-type "$2.tmp")
 		case $mime in
 			image/*)
+				mv --force "$2.tmp" "$2"
+				mv --force "$2.tmp.remote-timestamp" "$2.remote-timestamp"
 				exit 0
 			;;
 			*)
 				echo "Error downloading $(cat "$1"):"
 				echo "File is not an image: $mime"
-				rm --force "$2" "$2.remote-timestamp"
+				rm --force "$2.tmp" "$2.tmp.remote-timestamp"
 				exit 1
 			;;
 		esac
