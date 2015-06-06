@@ -1,0 +1,13 @@
+#!/bin/sh
+
+# Copyright 2015 Paul Wise
+# Released under the MIT/Expat license, see doc/COPYING
+
+# Compare two images using imagemagick
+#
+# Usage:
+# compare-image <options, all ignored> <first image> <second>
+
+set -e
+while [ $# -ge 3 ] ; do	shift ; done
+compare "$1" "$2" png:- | montage -geometry +4+4 "$1" - "$2" png:- | display -title "$1" -
