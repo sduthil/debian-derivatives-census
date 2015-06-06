@@ -15,8 +15,6 @@ if test -s "$1" ; then
 	ret=$?
 
 	if [ $ret -ne 0 ]; then
-		mv --force "$2.tmp" "$2"
-		mv --force "$2.tmp.remote-timestamp" "$2.remote-timestamp"
 		exit $ret
 	else
 		# Check that the file is an image
