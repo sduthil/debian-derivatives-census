@@ -7,7 +7,7 @@ export APT_CONFIG=$(CURDIR)/../etc/apt.conf
 
 derivatives := $(shell cat derivatives)
 
-.PHONY: all clean $(derivatives)
+.PHONY: all clean review $(derivatives)
 
 ALL = \
 	HEADER.html \
@@ -52,7 +52,10 @@ clean: derivatives
 			rmdir "$$d" ; \
 		fi \
 	done
-	rm -rf $(ALL) *.remote-timestamp
+	rm -rf $(ALL) planet-svn-rw *.remote-timestamp
+
+review:
+	review-planet-config-heads
 
 HEADER.html:
 	ln -sf ../doc/HEADER.var.html $@

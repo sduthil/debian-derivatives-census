@@ -1,0 +1,25 @@
+#!/bin/sh
+
+# Copyright 2015 Paul Wise
+# Released under the MIT/Expat license, see doc/COPYING
+
+# Review the changes to Planet Derivatives config/heads.
+#
+# Usage: You need to be a Debian member to run this script
+# review-planet-config-heads
+
+set -e
+echo 'Downloading planet svn read-write, new config and new heads...'
+svn co --quiet svn+ssh://svn.debian.org/svn/planet-debian/trunk planet-svn-rw
+rsync --cvs-exclude --copy-unsafe-links --recursive --delete lw08.debian.org:/srv/qa.debian.org/export/derivs/census/var/planet-heads/ planet-svn-rw/heads/deriv/
+rsync --cvs-exclude --copy-unsafe-links --recursive --delete lw08.debian.org:/srv/qa.debian.org/export/derivs/census/var/planet-config planet-config
+compare-planet-config planet-svn-rw planet-config | patch -d planet-svn-rw -p0
+echo 'Comparing planet config and heads...'
+svn diff planet-svn-rw/config/config.ini.deriv
+svn diff --diff-cmd ./bin/compare-images --force planet-svn-rw/heads/deriv/
+if svn diff planet-svn-rw/config/config.ini.deriv | grep -q '^\+\[' ; then
+	echo 'Please review the new RSS feeds:'
+	svn diff planet-svn-rw/config/config.ini.deriv | grep '^\+\[' | sed 's_^\+\[__p;s_]$__'
+fi
+echo 'Comparisons done, to commit the changes, please run this command:'
+echo 'svn commit planet-svn-rw'
