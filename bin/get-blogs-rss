@@ -21,7 +21,7 @@ use File::Temp qw(tempfile);
 use XML::Feed;
 
 my $ca_dir = '/etc/ssl/ca-global';
-$ENV{HTTPS_CA_DIR} = $ca_dir if -d $ca_dir;
+$ENV{PERL_LWP_SSL_CA_PATH} = $ca_dir if -d $ca_dir;
 
 my @feeds;
 my $blog_count = 0;
