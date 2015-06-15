@@ -16,7 +16,7 @@ rsync --cvs-exclude --copy-unsafe-links --recursive --delete lw08.debian.org:/sr
 compare-planet-config planet-svn-rw planet-config | patch -d planet-svn-rw -p0
 echo 'Comparing planet config and heads...'
 svn diff planet-svn-rw/config/config.ini.deriv
-svn diff --diff-cmd ./bin/compare-images --force planet-svn-rw/heads/deriv/
+svn diff --diff-cmd compare-images --force planet-svn-rw/heads/deriv/
 if svn diff planet-svn-rw/config/config.ini.deriv | grep -q '^\+\[' ; then
 	echo 'Please review the new RSS feeds:'
 	svn diff planet-svn-rw/config/config.ini.deriv | grep '^\+\[' | sed 's_^\+\[__p;s_]$__'
