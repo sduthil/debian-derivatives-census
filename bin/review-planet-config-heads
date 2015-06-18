@@ -19,7 +19,7 @@ svn diff planet-svn-rw/config/config.ini.deriv
 svn diff --diff-cmd compare-images --force planet-svn-rw/heads/deriv/
 if svn diff planet-svn-rw/config/config.ini.deriv | grep -q '^\+\[' ; then
 	echo 'Please review the new RSS feeds:'
-	svn diff planet-svn-rw/config/config.ini.deriv | grep '^\+\[' | sed 's_^\+\[__p;s_]$__'
+	svn diff planet-svn-rw/config/config.ini.deriv | grep '^\+\[' | sed 's_^\+\[__;s_]$__'
 fi
 echo 'Comparisons done, to commit the changes, please run this command:'
 echo 'svn commit planet-svn-rw'
