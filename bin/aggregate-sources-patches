@@ -7,6 +7,7 @@
 #
 # Usage:
 # aggregate-source-patches <list of derivatives> <source patches list>
+# FIXME: add a dd-list of patched packages
 
 import os
 import sys
