@@ -1,2 +1,2 @@
-MAILTO=pabs@debian.org,zumbi@kos.to,jonathan@ubuntu.com
+MAILTO=dex-census@lists.alioth.debian.org
 @daily cd /srv/qa.debian.org/export/derivs/census ; ./bin/snapshot-cron

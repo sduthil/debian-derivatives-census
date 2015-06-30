@@ -1,2 +1,2 @@
-MAILTO=pabs@debian.org,jonathan@ubuntu.com
+MAILTO=dex-census@lists.alioth.debian.org
 @daily cd ~pabs/census ; ./bin/general-cron
