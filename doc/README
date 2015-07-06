@@ -199,6 +199,7 @@ The packages are only used when running the compare-source-package script,
 which is only run on snapshot.debian.org:
 
 python-psycopg2
+python-urllib3
 python-requests
 python-simplejson (optional)
 python-yaml
