@@ -1,3 +1,4 @@
 IndexOrderDefault Descending Date
 IndexIgnore HEADER.html FOOTER.html
 HeaderName HEADER.html
+AddType text/plain patch

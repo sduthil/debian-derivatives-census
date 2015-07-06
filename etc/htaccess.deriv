@@ -1,1 +1,2 @@
 IndexIgnore Makefile HEADER.html FOOTER.html
+AddType text/plain log patch
