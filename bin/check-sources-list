@@ -9,6 +9,7 @@
 # check-package-script <sources.list file> <log file>
 
 # FIXME: check for duplicate sources.list entries
+# FIXME: check sources.list against reprepro config files
 
 import os
 import sys
