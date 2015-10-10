@@ -34,7 +34,7 @@ except IOError:
 # Load new data about patches from individual derivatives
 new_patches = []
 for deriv in derivatives:
-	# We explicitly do not ignore inactive derivatives since 
+	# We explicitly do not ignore inactive derivatives since
 	# their files may go missing at any time.
 	try:
 		f = open(os.path.join(deriv,'sources.patches'))

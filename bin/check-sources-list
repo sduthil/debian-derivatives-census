@@ -24,7 +24,7 @@ archs_file = os.path.realpath(os.path.join(__file__, '..', '..', 'etc', 'archite
 with open(archs_file) as f:
 	archs = f.read().splitlines()
 
-# Setup logging 
+# Setup logging
 try: os.remove(sys.argv[2])
 except OSError: pass
 logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.DEBUG, filename=sys.argv[2])
@@ -53,7 +53,7 @@ for line in sources_list:
 	line = line[1]
 	if line[0] == '[':
 		end_options = line.find(']')
-		entry.options = line[1:end_options] if ']' in line else line[1:] 
+		entry.options = line[1:end_options] if ']' in line else line[1:]
 		entry.options = entry.options.split()
 		entry.options = dict([opt.split('=',1) for opt in entry.options])
 		entry.options = dict([(k, v.split(',') if k == 'arch' else v) for k, v in entry.options.items()])
@@ -68,7 +68,7 @@ for line in sources_list:
 	else: entry.components = []
 	sources_entries.append(entry)
 
-# Empty or fully commented sources.list 
+# Empty or fully commented sources.list
 if not sources_entries:
 	logging.warning('no sources entries')
 	sys.exit()
