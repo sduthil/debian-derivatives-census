@@ -20,3 +20,5 @@ number of headers of each type
 Add a layer for merging with external configs, reporting diffs
 
 compare script: rsync down files when unable to connect to postgres
+
+aggregate sources.new
