@@ -99,6 +99,12 @@ These are stored in the etc/ directory.
 
 curl.conf: sets some parameters for curl
 htaccess.*: sets some parameters for Apache
+architectures: list of Debian related architectures
+
+You can update the list of architectures by running
+this command on the snapshot.debian.org server:
+
+psql service=snapshot-guest -t -c "SELECT DISTINCT architecture FROM file_binpkg_mapping WHERE architecture NOT IN ('all', 'freebsd-i386') ORDER BY architecture;" | tr -d ' '
 
 /-------------------------------------------------
 | Data files
