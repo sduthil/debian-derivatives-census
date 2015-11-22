@@ -13,6 +13,7 @@ kfreebsd-amd64
 kfreebsd-i386
 m68k
 mips
+mips64el
 mipsel
 powerpc
 powerpcspe
