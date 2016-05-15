@@ -29,8 +29,12 @@ test -d "$apt/var/cache/apt/archives/partial" || mkdir --parents "$apt/var/cache
 test -f "$apt/var/lib/dpkg/status" || touch "$apt/var/lib/dpkg/status"
 test -f "$apt/etc/apt/trusted.gpg" || touch "$apt/etc/apt/trusted.gpg"
 
+# debian.org machines split out CA certs into a separate directory
+dir=/etc/ssl/ca-global
+test -d $dir && capath="-o=Acquire::https::CaInfo=$dir/ca-certificates.crt"
+
 # Update the apt metadata
-apt-get update -q=2 -y
+apt-get update $capath -q=2 -y
 
 # Fix the timestamp on the apt dir
 # apt always updates the cache files :(
