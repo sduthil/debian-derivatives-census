@@ -9,6 +9,8 @@
 # Usage:
 # check-package-script <sources.list file> <apt dir> <log file>
 
+# FIXME: check for missing secure hashes in PGP sigs, Release, Packages, Sources
+
 import re
 import os
 import sys
