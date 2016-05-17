@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Copyright 2011 Paul Wise
+# Copyright 2011 David Kalnischkies
 # Released under the MIT/Expat license, see doc/COPYING
 
 # A hack to pretend that any OpenPGP-signed files are signed by a known and
