@@ -124,6 +124,8 @@ checksum_types = ('sha1', 'sha256', 'md5sum')
 checksum_hashlib = ('sha1', 'sha256', 'md5')
 checksum_headers = ('Checksums-Sha1', 'Checksums-Sha256', 'Files')
 ishex = lambda s: not(set(s)-set(string.hexdigits))
+always_use_scratch_space = ('libreoffice', 'iceweasel')
+scratch_space = os.path.expanduser('~/tmp')
 
 timeout = 60
 session = requests.Session()
@@ -677,10 +679,10 @@ def prepare(dsc_name, dsc_sha1, parts):
 	tmp_parent = None
 	if total_size*2.0 > tmp_size()/2.0 or total_size > tmp_space():
 		logging.info('prepare: not enough space in /tmp, using scratch space: %s %s %s', total_size, tmp_size(), tmp_space())
-		tmp_parent = os.path.expanduser('~/tmp')
-	elif dsc_name.startswith('libreoffice_') or dsc_name.startswith('iceweasel_'):
-		logging.info('prepare: iceweasel/libreoffice, always using scratch space')
-		tmp_parent = os.path.expanduser('~/tmp')
+		tmp_parent = scratch_space
+	elif dsc_name.split('_', 1)[0] in always_use_scratch_space:
+		logging.info('prepare: %s, always using scratch space' % '/'.join(always_use_scratch_space))
+		tmp_parent = scratch_space
 	else:
 		logging.debug('prepare: enough space in /tmp, not using scratch space: %s %s %s', total_size, tmp_size(), tmp_space())
 
@@ -732,10 +734,10 @@ def prepare_debian(dsc_name, dsc_sha1, files, total_size):
 	tmp_parent = None
 	if total_size > tmp_space():
 		logging.info('prepare_debian: not enough space in /tmp, using scratch space: %s %s %s', total_size, tmp_size(), tmp_space())
-		tmp_parent = os.path.expanduser('~/tmp')
-	elif dsc_name.startswith('libreoffice_') or dsc_name.startswith('iceweasel_'):
-		logging.info('prepare: iceweasel/libreoffice, always using scratch space')
-		tmp_parent = os.path.expanduser('~/tmp')
+		tmp_parent = scratch_space
+	elif dsc_name.split('_', 1)[0] in always_use_scratch_space:
+		logging.info('prepare: %s, always using scratch space' % '/'.join(always_use_scratch_space))
+		tmp_parent = scratch_space
 	else:
 		logging.debug('prepare_debian: enough space in /tmp, not using scratch space: %s %s %s', total_size, tmp_size(), tmp_space())
 
