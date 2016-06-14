@@ -12,6 +12,7 @@ ALL = \
 	status \
 	sources.list \
 	sources.stamp \
+	sources.log.warnings \
 	apt \
 	name \
 	vendor \
@@ -64,6 +65,16 @@ sources.files sources.patches sources.links sources.new sources.log: sources.sta
 sources.stamp: sources.list apt FORCE
 	compare-source-package-list sources.list apt sources.files sources.patches sources.links sources.new sources.log
 	touch $@
+
+sources.log.warnings: sources.log sources.stamp
+	-grep -EC5 '^(WARNING|ERROR): ' $< > $@.tmp
+ifeq ($(notdir $(CURDIR)), Ordissimo)
+	sed -i '/WARNING: unable to download sha1 file, ignoring: Forbidden .*non-free/s/WARNING/INFO/' $@.tmp
+	sed -i '/WARNING: unable to download sha1 file, ignoring: 403: .*non-free/s/WARNING/INFO/' $@.tmp
+	sed -i '/WARNING: finished processing source package .*: sha1 missing for dsc file/s/WARNING/INFO/' $@.tmp
+endif
+	sed -i '/ using scratch space: /s/: [0-9]\+ [0-9]\+ [0-9]\+$$//' $@.tmp
+	mv --force $@.tmp $@
 
 name: wiki.txt
 	wiki-text-to-name $^ $@

@@ -141,8 +141,14 @@ if os.path.exists(debian_ssl_bundle):
 session.stream = True
 del session.headers['Accept-Encoding']
 
+# Setup logging
+log_file = sys.argv[7]
+remove(sys.argv[7])
+logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.DEBUG, filename=log_file)
+
 # Don't do anything on hosts without the snapshot.d.o farm
 if not os.path.isdir(snapshot_cache_dir):
+	logging.error('Snapshot cache dir not found and snapshot API not yet supported: %s', snapshot_cache_dir)
 	sys.exit()
 
 # Init
@@ -153,8 +159,6 @@ sources_list = apt_pkg.SourceList()
 sources_list.read_main_list()
 conn = psycopg2.connect("service=snapshot-guest")
 cur = conn.cursor()
-remove(sys.argv[7])
-logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.DEBUG, filename=sys.argv[7])
 
 # Voodoo
 lists_dir = apt_pkg.config.find_dir('Dir::State::lists')
