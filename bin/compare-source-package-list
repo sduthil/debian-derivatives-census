@@ -126,7 +126,7 @@ checksum_headers = ('Checksums-Sha1', 'Checksums-Sha256', 'Files')
 ishex = lambda s: not(set(s)-set(string.hexdigits))
 always_use_scratch_space = ('openoffice', 'libreoffice', 'firefox', 'iceweasel')
 scratch_space = os.path.expanduser('~/tmp')
-if not os.path.exists(scratch_space)
+if not os.path.exists(scratch_space):
 	makedirs(scratch_space)
 
 timeout = 60
