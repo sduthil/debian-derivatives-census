@@ -73,7 +73,7 @@ ifeq ($(notdir $(CURDIR)), Ordissimo)
 	sed -i '/WARNING: unable to download sha1 file, ignoring: 403: .*non-free/s/WARNING/INFO/' $@.tmp
 	sed -i '/WARNING: finished processing source package .*: sha1 missing for dsc file/s/WARNING/INFO/' $@.tmp
 endif
-	-grep -EC5 '^(WARNING|ERROR): ' $<.tmp > $@.tmp.tmp
+	-grep -EC5 '^(WARNING|ERROR): ' $@.tmp > $@.tmp.tmp
 	mv --force $@.tmp.tmp $@.tmp
 	sed -i '/ using scratch space: /s/: [0-9]\+ [0-9]\+ [0-9]\+$$//' $@.tmp
 	mv --force $@.tmp $@
