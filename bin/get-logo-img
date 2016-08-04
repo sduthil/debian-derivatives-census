@@ -20,7 +20,7 @@ if test -s "$1" ; then
 		# Check that the file is an image
 		mime=$(file --brief --mime-type "$2.tmp")
 		# Workaround https://bugs.debian.org/829199
-		if [ $mime = text/html ] && head -n1 "$2" | grep -q '^ *<svg[ >]' ; then
+		if [ $mime = text/html ] && head -n1 "$2.tmp" | grep -q '^ *<svg[ >]' ; then
 			mime=image/svg+xml
 		fi
 		case $mime in
