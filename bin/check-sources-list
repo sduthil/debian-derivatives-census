@@ -10,6 +10,7 @@
 
 # FIXME: check for duplicate sources.list entries
 # FIXME: check sources.list against reprepro config files
+# FIXME: check sources.list against Architectures/Components in Release files
 
 import os
 import sys
