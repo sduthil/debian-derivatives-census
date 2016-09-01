@@ -129,8 +129,12 @@ scratch_space = os.path.expanduser('~/tmp')
 if not os.path.exists(scratch_space):
 	makedirs(scratch_space)
 
+retries = 3
 timeout = 60
 session = requests.Session()
+adapter = requests.adapters.HTTPAdapter(max_retries=retries)
+session.mount('http://', adapter)
+session.mount('https://', adapter)
 session.headers['User-Agent'] = 'Debian Derivatives Census QA bot'
 debian_ssl_bundle = '/etc/ssl/ca-global/ca-certificates.crt'
 if os.path.exists(debian_ssl_bundle):
