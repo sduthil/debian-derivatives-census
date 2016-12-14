@@ -363,7 +363,7 @@ def download_and_check_hash(url, dir, hash, hash_type):
 			symlink(os.path.relpath(sha1_path, os.path.dirname(path)), path)
 			logging.debug('does not exist in snapshot sha1 cache: %s %s %s %s', hash_type, hash, sha1, url)
 			return (False, sha1)
-	except requests.HTTPError, e:
+	except requests.HTTPError as e:
 		st = response.status_code
 		logging.warning('unable to download hash file, ignoring: %s: %s %s', st, e, url)
 		return ('unknown', None)
@@ -532,7 +532,7 @@ def srcpkg_was_in_debian(name, version=None):
 		else:
 			cur.execute('SELECT version FROM srcpkg WHERE name=%s LIMIT 1;', (name,))
 			return not not cur.fetchone()
-	except psycopg2.Error, e:
+	except psycopg2.Error as e:
 		database_error(e)
 		return None
 
@@ -544,7 +544,7 @@ def sha1_to_srcpkgs(sha1):
 			JOIN file_srcpkg_mapping ON file_srcpkg_mapping.srcpkg_id=srcpkg.srcpkg_id
 			WHERE hash=%s;''', (sha1,))
 		return cur.fetchall()
-	except psycopg2.Error, e:
+	except psycopg2.Error as e:
 		database_error(e)
 		return None
 
@@ -556,7 +556,7 @@ def srcpkg_to_sha1s(name, version):
 			JOIN srcpkg ON srcpkg.srcpkg_id=file_srcpkg_mapping.srcpkg_id
 			WHERE name=%s AND version=%s;''', (name, version))
 		return cur.fetchall()
-	except psycopg2.Error, e:
+	except psycopg2.Error as e:
 		database_error(e)
 		return None
 
@@ -567,7 +567,7 @@ def srcpkg_to_srcpkgs(name):
 			FROM srcpkg
 			WHERE name=%s ORDER BY version DESC;''', (name,))
 		return cur.fetchall()
-	except psycopg2.Error, e:
+	except psycopg2.Error as e:
 		database_error(e)
 		return None
 
@@ -575,7 +575,7 @@ def sha1s_to_files(sha1):
 	try:
 		cur.execute('SELECT DISTINCT ON (name, hash) name, hash FROM file WHERE hash=%s;', hash)
 		return cur.fetchall()
-	except psycopg2.Error, e:
+	except psycopg2.Error as e:
 		database_error(e)
 		return None
 
@@ -588,7 +588,7 @@ def srcpkg_to_files(name, version):
 			JOIN file ON file_srcpkg_mapping.hash=file.hash
 			WHERE srcpkg.name=%s AND srcpkg.version=%s;''', (name, version))
 		return cur.fetchall()
-	except psycopg2.Error, e:
+	except psycopg2.Error as e:
 		database_error(e)
 		return None
 
@@ -611,7 +611,7 @@ def sha1_version_to_derived_from(sha1, version):
 			ORDER BY name ASC, version ASC
 			LIMIT 1;''', (sha1, version))
 		return cur.fetchall()
-	except psycopg2.Error, e:
+	except psycopg2.Error as e:
 		database_error(e)
 		return None
 
@@ -632,7 +632,7 @@ def srcpkg_to_derived_from(name, version):
 			ORDER BY version ASC
 			LIMIT 1;''', (name,))
 		return cur.fetchall()
-	except psycopg2.Error, e:
+	except psycopg2.Error as e:
 		database_error(e)
 		return None
 
