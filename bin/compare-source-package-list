@@ -367,7 +367,7 @@ def download_and_check_hash(url, dir, hash, hash_type):
 		st = response.status_code
 		logging.warning('unable to download hash file, ignoring: %s: %s %s', st, e, url)
 		return ('unknown', None)
-	except (requests.ConnectionError, requests.RequestException, urllib3.exceptions.HTTPError, socket.error) as e:
+	except (requests.RequestException, urllib3.exceptions.HTTPError, socket.error) as e:
 		logging.warning('unable to download sha1 file, ignoring: %s %s', e, url)
 		return ('unknown', None)
 
@@ -394,7 +394,7 @@ def download_sha1(url, dir, sha1):
 		st = response.status_code
 		logging.warning('unable to download sha1 file, ignoring: %s: %s %s', st, e, url)
 		return ('unknown', None)
-	except (requests.ConnectionError, requests.RequestException, urllib3.exceptions.HTTPError, socket.error) as e:
+	except (requests.RequestException, urllib3.exceptions.HTTPError, socket.error) as e:
 		logging.warning('unable to download sha1 file, ignoring: %s %s', e, url)
 		return ('unknown', None)
 
