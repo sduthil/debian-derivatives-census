@@ -15,7 +15,10 @@
 import os
 import sys
 import logging
-from urlparse import urlparse
+try:
+	from urllib.parse import urlparse
+except ImportError:
+	from urlparse import urlparse
 
 class sources_entry:
 	def __repr__(self):
