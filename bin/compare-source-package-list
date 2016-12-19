@@ -95,7 +95,7 @@ def symlink(source, link):
 	try: os.symlink(source, link)
 	except OSError: pass
 
-# http://www.chiark.greenend.org.uk/ucgi/~cjwatson/blosxom/2009-07-02-python-sigpipe.html
+# http://www.chiark.greenend.org.uk/~cjwatson/blog/python-sigpipe.html
 def subprocess_setup():
 	# Python installs a SIGPIPE handler by default. This is usually not what
 	# non-Python subprocesses expect.
