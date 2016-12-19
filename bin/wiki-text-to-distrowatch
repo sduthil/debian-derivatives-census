@@ -9,5 +9,5 @@
 # wiki-text-to-distrowatch <wiki text file> <distrowatch identifier file>
 
 set -e
-sed -r -n -e 's_^ *\* *Distrowatch *[^:]*: http://distrowatch\.com/(table\.php\?distribution=)?(.*)_\2_p' "$1" | tr ' ' '\n' > "$2"
+sed -r -n -e 's_^ *\* *Distrowatch *[^:]*: https?://distrowatch\.com/(table\.php\?distribution=)?(.*)_\2_p' "$1" | tr ' ' '\n' > "$2"
 find "$2" -empty -delete
