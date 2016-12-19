@@ -45,7 +45,7 @@ for d in derivatives:
 new_config = '\n'.join(new_config)
 
 if new_config and new_config != old_config:
-	tmp = tempfile(prefix=config+'.tmp.', dir='', delete=False)
+	tmp = tempfile(prefix=config+'.tmp.', dir='', delete=False, mode='w')
 	tmp.write(new_config)
 	tmp.close()
 	dummy = open(tmp.name+'.dummy','w')
