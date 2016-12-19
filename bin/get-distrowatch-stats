@@ -8,4 +8,4 @@
 # Usage:
 # get-distrowatch-stats <distrowatch stats file>
 
-exec get-url http://distrowatch.com/text/fullphr-52.txt "$1"
+exec get-url https://distrowatch.com/text/fullphr-52.txt "$1"
