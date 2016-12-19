@@ -142,7 +142,7 @@ for item in acquire.items:
 			fn = fn.replace('/partial/','/')
 		if not os.path.exists(fn):
 			fn = fn.replace('InRelease','Release')
-		try: f = file(fn)
+		try: f = open(fn)
 		except IOError:
 			logging.warning('missing Release file %s', fn)
 			continue
@@ -222,7 +222,7 @@ for item in acquire.items:
 for source in source_entries:
 	for s in source:
 		fn = os.path.join(lists_dir, s.describe.rstrip(')').rpartition('(')[2])
-		try: f = file(fn)
+		try: f = open(fn)
 		except IOError:
 			logging.warning('missing Sources file %s', fn)
 			continue
@@ -259,7 +259,7 @@ for source in source_entries:
 for binary in binary_entries:
 	for b in binary:
 		fn = b.describe.rstrip(')').rpartition('(')[2]
-		try: f = file(fn)
+		try: f = open(fn)
 		except IOError:
 			logging.warning('missing Packages file %s', fn)
 			continue
