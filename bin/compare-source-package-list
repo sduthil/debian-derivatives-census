@@ -310,7 +310,7 @@ def update_dsc_file(dir, dsc_name, parts):
 			hashes = {}
 			for (type, func) in zip(checksum_types, checksum_hashlib):
 				hashes[type] = getattr(hashlib, func)()
-			for chunk in iter(lambda: f.read(128*64L), b''):
+			for chunk in iter(lambda: f.read(128*64), b''):
 				for type in checksum_types:
 					hashes[type].update(chunk)
 			for type in checksum_types:
