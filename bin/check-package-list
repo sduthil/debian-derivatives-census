@@ -57,9 +57,11 @@ release_hash_types = {
 	'SHA-512': ('SHA512', 128, 'sha512'),
 }
 release_headers = [
+	'Acquire-By-Hash',
 	'Architectures',
 	'Architecture',
 	'Archive',
+	'Changelogs',
 	'Codename',
 	'Suite',
 	'Components',
@@ -76,6 +78,7 @@ release_headers = [
 	'SHA1',
 	'SHA256',
 	'SHA512',
+	'Signed-By',
 ]
 archs_file = os.path.realpath(os.path.join(__file__, '..', '..', 'etc', 'architectures'))
 with open(archs_file) as f:
@@ -199,6 +202,10 @@ for item in acquire.items:
 			logging.warning('release %s: Release file incorrectly uses Architecture header instead of Architectures', item.desc_uri)
 		if 'Component' in release:
 			logging.warning('release %s: Release file incorrectly uses Component header instead of Components', item.desc_uri)
+		if 'Signed-By' in release:
+			if len(release['Signed-By']) != 40:
+				logging.error('release %s: Optional header Signed-By is of invalid length', item.desc_uri)
+				logging.error('%s: %s', release['Signed-By'], len(release['Signed-By']))
 		if 'Suite' in release:
 			if len(release['Suite'].split()) != 1:
 				logging.warning('release %s: Optional header Suite does not contain single word value', item.desc_uri)
