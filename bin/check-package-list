@@ -10,6 +10,7 @@
 # check-package-script <sources.list file> <apt dir> <log file>
 
 # FIXME: check for missing secure hashes in PGP sigs, Release, Packages, Sources
+# FIXME: filter out dbgsym packages when comparing source/binary package lists
 
 import re
 import os

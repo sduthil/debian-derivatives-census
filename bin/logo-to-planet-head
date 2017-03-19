@@ -8,6 +8,8 @@
 # Usage:
 # logo-to-planet-head <logo image> <planet head image>
 
+# FIXME: handle SVG files correctly
+
 import os
 import sys
 

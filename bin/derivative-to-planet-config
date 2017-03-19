@@ -61,6 +61,7 @@ def config_snippet(rss, name, longname, head):
 	else:
 		return None
 
+# FIXME: turn this into a set and modernise the below code
 new_config = []
 
 try:

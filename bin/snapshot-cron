@@ -1,5 +1,6 @@
 #!/bin/bash
 # This script is to be run on snapshot.debian.org only
+# FIXME: ignore DEBUG/INFO lines
 
 (
 flock -n 666 || exit 0
