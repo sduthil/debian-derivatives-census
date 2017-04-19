@@ -1,1 +1,1 @@
-This patch was too large to be useful so it was removed.
+This patch was too large (> 5MiB) to be useful so it was removed.
