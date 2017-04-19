@@ -1,1 +1,15 @@
 This patch was too large (> 5MiB) to be useful so it was removed.
+
+If you are not a Debian member you can contact the debian-derivatives list
+and ask a Debian member to recreate it for you using the instructions below.
+
+If you are a Debian member and would like to recreate it you can do so by
+logging into lw08.debian.org, reading the symlink of the patch you would like
+to view and then doing a debdiff of the two files using hashes from the symlink.
+
+$ ssh lw08.debian.org
+lw08:~$ cd /srv/qa.debian.org/export/derivs/census/var/
+lw08:var$ readlink Distro/patches/f/foo/foo_1.2.3-4_foo_1.2.3-4+distro.patch
+../../../../sha1-patches/2f/92/2f92287ceae9a1e797a46c2f10908f85f579f3ff/be/9b/be9bcbdce767b37b447f7fc1880bc59005f46fce.patch
+lw08:var$ cd sha1-farm
+lw08:sha1-farm$ debdiff 2f/92/2f92287ceae9a1e797a46c2f10908f85f579f3ff be/9b/be9bcbdce767b37b447f7fc1880bc59005f46fce | xz > ~/debdiff.xz
