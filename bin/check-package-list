@@ -154,7 +154,7 @@ for item in acquire.items:
 		release = debian.deb822.Release(f)
 		for type, (header, size, short_type) in release_hash_types.items():
 			if header not in release:
-				if header != 'SHA512': logging.warning('release %s: no %s hash', item.desc_uri, type)
+				if header not in ['MD5Sum', 'SHA1', 'SHA512']: logging.warning('release %s: no %s hash', item.desc_uri, type)
 				continue
 			for x in release[header]:
 				if len(x[short_type]) != size:
@@ -288,7 +288,7 @@ for binary in binary_entries:
 			packages_source_packages.append((source_name, source_version))
 			for type, (header, size) in binary_hash_types.items():
 				if header not in binpkg:
-					if header != 'SHA512': logging.warning('binary %s %s: no %s hash', name, version, type)
+					if header not in ['MD5Sum', 'SHA1', 'SHA512']: logging.warning('binary %s %s: no %s hash', name, version, type)
 					continue
 				if len(binpkg[header]) != size:
 					logging.warning('binary %s %s: %s hash has unexpected size %s instead of %s', name, version, type, len(binpkg[header]), size)
