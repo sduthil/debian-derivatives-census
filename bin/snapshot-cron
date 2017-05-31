@@ -1,6 +1,5 @@
 #!/bin/bash
 # This script is to be run on snapshot.debian.org only
-# FIXME: ignore DEBUG/INFO lines
 
 (
 flock -n 666 || exit 0
@@ -10,7 +9,8 @@ umask 0002
 time make -j3 -s -i
 cd var
 cat ./*/sources.log.warnings > sources.log.warnings.tmp
-diff --unified sources.log.warnings sources.log.warnings.tmp || true
+diff --unified --ignore-all-space --ignore-matching-lines '^\(DEBUG\|INFO\):' \
+     sources.log.warnings sources.log.warnings.tmp || true
 mv --force sources.log.warnings.tmp sources.log.warnings
 find ~/tmp /tmp -mindepth 1 -user qa 2> /dev/null | head -n 10
 find ~/tmp /tmp -mindepth 1 -user qa -delete 2> /dev/null
