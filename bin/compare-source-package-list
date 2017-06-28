@@ -55,6 +55,7 @@
 # FIXME: add an in-memory cache of hashes so that hashes in multiple releases hit the disk once
 # FIXME: deal with rate-limited websites like alioth that do not like many requests
 # FIXME: add a dd-list of patched packages or tree of maintainers and patches
+# FIXME: demote this to info for new files: snapshot database issue, no Debian files found
 
 import re
 import os
