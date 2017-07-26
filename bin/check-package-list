@@ -285,7 +285,8 @@ for binary in binary_entries:
 				source_name = source_name[0]
 			else:
 				source_version = re.sub(r'\+b\d+$', '', version)
-			packages_binary_packages.append((name, source_version))
+			if 'Auto-Built-Package' not in binpkg:
+				packages_binary_packages.append((name, source_version))
 			packages_source_packages.append((source_name, source_version))
 			for type, (header, size) in binary_hash_types.items():
 				if header not in binpkg:
