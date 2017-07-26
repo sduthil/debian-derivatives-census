@@ -289,7 +289,7 @@ for binary in binary_entries:
 			packages_source_packages.append((source_name, source_version))
 			for type, (header, size) in binary_hash_types.items():
 				if header not in binpkg:
-					if header not in ['MD5Sum', 'SHA1', 'SHA512']: logging.warning('binary %s %s: no %s hash', name, version, type)
+					if header not in ['MD5sum', 'SHA1', 'SHA512']: logging.warning('binary %s %s: no %s hash', name, version, type)
 					continue
 				if len(binpkg[header]) != size:
 					logging.warning('binary %s %s: %s hash has unexpected size %s instead of %s', name, version, type, len(binpkg[header]), size)
