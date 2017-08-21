@@ -69,6 +69,7 @@ sources.stamp: sources.list apt FORCE
 sources.log.warnings: sources.log sources.stamp
 	cp --force $< $@.tmp
 	sed -i '/^WARNING: Retrying /s/WARNING/INFO/' $@.tmp
+	sed -i 's/ object at 0x[a-f0-9]*/ object/g' $@.tmp
 ifeq ($(notdir $(CURDIR)), Ordissimo)
 	sed -i '/WARNING: unable to download sha1 file, ignoring: Forbidden .*non-free/s/WARNING/INFO/' $@.tmp
 	sed -i '/WARNING: unable to download sha1 file, ignoring: 403: .*non-free/s/WARNING/INFO/' $@.tmp
