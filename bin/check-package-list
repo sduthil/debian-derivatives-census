@@ -248,7 +248,7 @@ for source in source_entries:
 				logging.info('no binary packages for source package %s %s', name, version)
 			for type, (header, size, short_type) in source_hash_types.items():
 				if header not in srcpkg:
-					if header != 'Checksums-Sha512': logging.warning('source %s %s: no %s hash', name, version, type)
+					if header not in ['Checksums-Sha512', 'Checksums-Sha1', 'Files']: logging.warning('source %s %s: no %s hash', name, version, type)
 					continue
 				for x in srcpkg[header]:
 					if len(x[short_type]) != size:
