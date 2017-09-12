@@ -162,8 +162,7 @@ apt_pkg.init()
 # Preparation
 sources_list = apt_pkg.SourceList()
 sources_list.read_main_list()
-conn = psycopg2.connect("service=snapshot-guest")
-cur = conn.cursor()
+database_open()
 
 # Voodoo
 lists_dir = apt_pkg.config.find_dir('Dir::State::lists')
@@ -516,14 +515,37 @@ def get_debian_info(files):
 	return (dsc_sha1, dsc_name, parts)
 
 # Functions for extracting information from the snapshots database
+def database_open():
+	global conn, cur
+	try:
+		conn = psycopg2.connect("service=snapshot-guest")
+		cur = conn.cursor()
+	except psycopg2.Error as e:
+		database_complain(logging.fatal, 'unable to open database connection', e)
+		sys.exit()
+
+def database_close():
+	try:
+		cur.close()
+		conn.close()
+	except psycopg2.Error as e:
+		database_complain(logging.fatal, 'unable to close database connection', e)
 
 def database_error(e):
+	database_complain(logging.warning, 'unable to execute database query', e)
+	try:
+		conn.reset()
+	except psycopg2.Error as e:
+		database_complain(logging.fatal, 'unable to reset database connection', e)
+		database_close()
+		database_open()
+
+def database_complain(complaint, msg, e)
 	reason = None
 	code = None
 	if hasattr(e, 'pgerror'): reason = e.pgerror
 	if hasattr(e, 'pgcode'): code = e.pgcode
-	logging.warning('unable to execute database query: %s %s', code, reason)
-	conn.reset()
+	complaint('%s: %s %s', msg, code, reason)
 
 def srcpkg_was_in_debian(name, version=None):
 	try:
@@ -1163,8 +1185,7 @@ logging.debug('processing distribution %s', derivative_short_name)
 files, patches, links, new = process_sources(source_entries, lists_dir)
 
 # Done with the database, close the connection
-cur.close()
-conn.close()
+database_close()
 
 # Write out the results
 filename = sys.argv[3]
