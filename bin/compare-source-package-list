@@ -540,7 +540,7 @@ def database_error(e):
 		database_close()
 		database_open()
 
-def database_complain(complaint, msg, e)
+def database_complain(complaint, msg, e):
 	reason = None
 	code = None
 	if hasattr(e, 'pgerror'): reason = e.pgerror
